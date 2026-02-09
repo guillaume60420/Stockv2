@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - MASTER V6</title>
+    <title>C2MI STOCK - MASTER V7</title>
     
     <style>
         :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; --dark: #880e4f; }
@@ -67,7 +67,13 @@
         .rafale-list { max-height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 15px 0; border: 1px solid #ddd; }
         .rafale-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 4px solid #28a745; align-items: center; }
 
-        /* PREVISION - TIMELINE */
+        /* PREVISION - ORACLE */
+        .oracle-card { background: #333; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid #FFD700; }
+        .oracle-title { font-weight: 900; text-transform: uppercase; font-size: 1.1rem; border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 10px; color: #FFD700; }
+        .oracle-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.95rem; }
+        .oracle-missing { color: #ff6b6b; font-weight: bold; }
+        .oracle-ok { color: #69f0ae; font-weight: bold; }
+
         .prev-machine-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px; }
         .prev-machine-name { font-weight: bold; font-size: 0.9rem; }
         .prev-date-input { padding: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 0.9rem; width: 140px; }
@@ -116,7 +122,7 @@
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition V6</p>
+            <p>Maître Guigui Edition V7 (Oracle)</p>
         </div>
 
         <div id="view-machines" class="grid-machines"></div>
@@ -198,16 +204,20 @@
         </div>
 
         <div id="sec-prev" class="section">
-            <div class="section-header"><h2>🔮 Le Visionnaire</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
+            <div class="section-header"><h2>🔮 L'Oracle</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
             
+            <div id="oracle-report" class="oracle-card">
+                <div style="text-align:center; padding:10px;">Calcul du destin...</div>
+            </div>
+
             <div class="alert" style="background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; font-size:0.9rem;">
-                ℹ️ Rentre la date de <strong>dernière maintenance</strong> (ou rentrée). Le système calcule +6 mois auto.
+                ℹ️ Vérifie les dates de <strong>dernière maintenance</strong> ci-dessous pour que l'Oracle soit précis.
             </div>
 
             <div id="prev-engins-list" style="margin-bottom:20px; max-height:300px; overflow-y:auto;">
                 </div>
             
-            <button class="btn-action" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);" onclick="calcPrev()">🔮 LANCER LA PROPHÉTIE</button>
+            <button class="btn-action" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);" onclick="calcPrev()">🔎 DÉTAILS MOIS PAR MOIS</button>
             
             <div id="prev-timeline" class="timeline"></div>
 
@@ -240,7 +250,7 @@
 
         let currentMachine = "";
         let stockData = {};
-        let maintenanceDates = {}; // Pour stocker les dates
+        let maintenanceDates = {}; 
         let scanner = null;
         let scanMode = ""; 
         let rafaleBuffer = [];
@@ -290,7 +300,7 @@
         function selectMachine(key) {
             currentMachine = key;
             stockData = {};
-            maintenanceDates = {}; // Reset dates
+            maintenanceDates = {}; 
             
             document.getElementById('view-machines').style.display = 'none';
             document.getElementById('machine-nav').classList.add('active');
@@ -303,11 +313,16 @@
                 stockData = doc.exists ? doc.data() : {};
                 if(document.getElementById('sec-stock').classList.contains('active')) renderStock();
                 if(document.getElementById('sec-remove').classList.contains('active')) initRemoveSelects();
+                if(document.getElementById('sec-prev').classList.contains('active')) updateOracle();
             });
 
             // Charger Dates Maintenance
             db.collection("maintenance").doc(currentMachine).get().then(doc => {
                 if(doc.exists) maintenanceDates = doc.data();
+                if(document.getElementById('sec-prev').classList.contains('active')) {
+                    renderPrevList();
+                    updateOracle();
+                }
             });
         }
 
@@ -327,7 +342,10 @@
             document.getElementById(`sec-${section}`).classList.add('active');
             
             if(section === 'stock') renderStock();
-            if(section === 'prev') renderPrevList();
+            if(section === 'prev') {
+                renderPrevList();
+                updateOracle(); // On lance l'oracle direct
+            }
             if(section === 'add') updateSelectsAdd();
             if(section === 'remove') initRemoveSelects();
         }
@@ -692,16 +710,14 @@
             });
         }
 
-        // --- NOUVELLE LOGIQUE PREVISION (TIMELINE) ---
+        // --- ORACLE & PREVISION (TIMELINE) ---
         function renderPrevList() {
             const d = document.getElementById('prev-engins-list');
             d.innerHTML = "";
             const engins = DB_ENGINS[currentMachine] || [];
             
             engins.forEach((name, i) => {
-                // On récupère la date enregistrée ou vide
                 const savedDate = maintenanceDates[name] || "";
-                
                 d.innerHTML += `
                     <div class="prev-machine-row">
                         <span class="prev-machine-name">${name}</span>
@@ -713,17 +729,78 @@
 
         function saveDate(machineName, dateVal) {
             maintenanceDates[machineName] = dateVal;
-            // On sauvegarde direct dans Firebase pour pas perdre
             db.collection("maintenance").doc(currentMachine).set(maintenanceDates, {merge:true});
+            updateOracle(); // Recalcul auto au changement de date
+        }
+
+        // --- LE COEUR DE L'ORACLE (BILAN ANNUEL) ---
+        function updateOracle() {
+            const oracleDiv = document.getElementById('oracle-report');
+            const today = new Date();
+            const endOfYear = new Date(today.getFullYear(), 11, 31); // 31 Décembre de cette année
+            
+            const engins = DB_ENGINS[currentMachine] || [];
+            let totalNeeded = 0;
+
+            // On vérifie combien de maintenances tombent avant la fin de l'année
+            engins.forEach(name => {
+                const dateStr = maintenanceDates[name];
+                if(dateStr) {
+                    const lastMaint = new Date(dateStr);
+                    const nextMaint = new Date(lastMaint);
+                    nextMaint.setMonth(nextMaint.getMonth() + 6);
+                    
+                    if(nextMaint <= endOfYear && nextMaint >= today) {
+                        totalNeeded++;
+                    }
+                    // Si la date est très vieille (retard), on compte aussi
+                    if (nextMaint < today) totalNeeded++;
+                }
+            });
+
+            if(totalNeeded === 0) {
+                oracleDiv.innerHTML = `<div class="oracle-title">BILAN ${today.getFullYear()}</div><div style="text-align:center; color:#69f0ae;">✨ Rien à prévoir pour la fin d'année !</div>`;
+                return;
+            }
+
+            // Calcul du stock
+            const stockH = stockData['filtration']?.['Filtre Huile']?.length || 0;
+            const stockG = stockData['filtration']?.['Filtre Gasoil']?.length || 0;
+            const stockA = stockData['filtration']?.['Filtre Air']?.length || 0;
+            const stockP = stockData['filtration']?.['Préfiltre']?.length || 0;
+
+            // Calcul des manquants
+            const missH = Math.max(0, totalNeeded - stockH);
+            const missG = Math.max(0, totalNeeded - stockG);
+            const missA = Math.max(0, totalNeeded - stockA);
+            const missP = Math.max(0, totalNeeded - stockP);
+
+            let html = `<div class="oracle-title">POUR FINIR L'ANNÉE ${today.getFullYear()}</div>`;
+            html += `<div style="margin-bottom:10px; font-size:0.9rem;">Il reste <strong>${totalNeeded}</strong> maintenances à faire.</div>`;
+            
+            if(missH + missG + missA + missP === 0) {
+                html += `<div style="text-align:center; color:#69f0ae; font-weight:bold; font-size:1.1rem;">✅ STOCK COMPLET !</div>`;
+            } else {
+                html += `<div style="background:#444; padding:10px; border-radius:5px;">`;
+                html += mkOracleLine("Filtre Huile", missH);
+                html += mkOracleLine("Filtre Gasoil", missG);
+                html += mkOracleLine("Filtre Air", missA);
+                html += mkOracleLine("Préfiltre", missP);
+                html += `</div><div style="text-align:center; margin-top:10px; font-weight:bold; color:#ff6b6b;">⚠️ IL FAUT COMMANDER !</div>`;
+            }
+
+            oracleDiv.innerHTML = html;
+        }
+
+        function mkOracleLine(name, missing) {
+            if(missing > 0) return `<div class="oracle-item"><span>${name}</span><span class="oracle-missing">Manque ${missing}</span></div>`;
+            return `<div class="oracle-item"><span>${name}</span><span class="oracle-ok">OK</span></div>`;
         }
 
         function calcPrev() {
             const timelineDiv = document.getElementById('prev-timeline');
             timelineDiv.innerHTML = "";
 
-            // 1. Récupérer les Stocks Actuels
-            // On cherche "Filtre Huile", "Filtre Gasoil", "Préfiltre", "Filtre Air" dans la cat "filtration"
-            // Note: Si l'utilisateur les a nommés autrement, il faudra adapter. On suppose les noms standards.
             let stocks = {
                 'Huile': stockData['filtration']?.['Filtre Huile']?.length || 0,
                 'Gasoil': stockData['filtration']?.['Filtre Gasoil']?.length || 0,
@@ -731,7 +808,6 @@
                 'Préfiltre': stockData['filtration']?.['Préfiltre']?.length || 0
             };
 
-            // 2. Calculer les événements sur 12 mois
             const events = [];
             const engins = DB_ENGINS[currentMachine] || [];
             
@@ -739,39 +815,23 @@
                 const dateStr = maintenanceDates[name];
                 if(dateStr) {
                     const lastMaint = new Date(dateStr);
-                    // Règle des 6 mois
                     const nextMaint = new Date(lastMaint);
                     nextMaint.setMonth(nextMaint.getMonth() + 6);
-                    
-                    // Si la date est dans le futur (ou très proche passé)
-                    events.push({ 
-                        date: nextMaint, 
-                        machine: name, 
-                        type: 'maintenance' 
-                    });
+                    events.push({ date: nextMaint, machine: name });
                 }
             });
 
-            // Trier par date
             events.sort((a, b) => a.date - b.date);
 
-            // 3. Générer la Timeline
             if(events.length === 0) {
                 timelineDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#999;'>Aucune date de maintenance renseignée.</div>";
                 return;
             }
 
-            // Mois en français
             const months = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
             events.forEach(evt => {
-                // Consommer le stock virtuel
-                stocks['Huile']--;
-                stocks['Gasoil']--;
-                stocks['Air']--;
-                stocks['Préfiltre']--;
-
-                // Vérifier si rupture
+                stocks['Huile']--; stocks['Gasoil']--; stocks['Air']--; stocks['Préfiltre']--;
                 const missing = [];
                 if(stocks['Huile'] < 0) missing.push("Huile");
                 if(stocks['Gasoil'] < 0) missing.push("Gasoil");
@@ -788,13 +848,11 @@
                             <strong>${evt.machine}</strong> arrive à l'atelier.
                             <br>
                 `;
-
                 if(isDanger) {
                     html += `<span style="color:#dc3545; font-weight:bold;">⚠️ STOCK INSUFFISANT !</span><br>Manque : ${missing.join(', ')}`;
                 } else {
                     html += `<span style="color:#28a745; font-weight:bold;">✅ Stock OK</span>`;
                 }
-
                 html += `</div></div>`;
                 timelineDiv.innerHTML += html;
             });
