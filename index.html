@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - MASTER</title>
+    <title>C2MI STOCK - FIRESTORE</title>
     
     <!-- Librairie Scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        /* STYLE PROPRE ET ROBUSTE */
         :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--primary); color: white; padding-bottom: 100px; }
-        
         .container { max-width: 800px; margin: 0 auto; padding: 15px; }
 
         /* HEADER */
@@ -21,20 +19,20 @@
         .header h1 { font-weight: 900; font-size: 1.8rem; text-transform: uppercase; }
         .header p { font-weight: 600; color: #666; font-size: 0.9rem; }
 
-        /* BOUTONS MACHINES */
+        /* GRID MACHINES */
         .grid-machines { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .card-machine { background: white; color: #333; padding: 20px; border-radius: 12px; text-align: center; cursor: pointer; transition: transform 0.1s; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
         .card-machine:active { transform: scale(0.96); }
         .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
         .name { font-weight: 800; color: var(--primary); text-transform: uppercase; font-size: 0.9rem; }
 
-        /* NAVIGATION */
+        /* NAV */
         .nav-bar { display: none; background: white; padding: 10px; border-radius: 12px; margin-bottom: 20px; justify-content: space-between; align-items: center; color: var(--primary); }
         .nav-bar.active { display: flex; }
         .nav-title { font-weight: 900; font-size: 1.2rem; }
         .btn-mini { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-        /* MENU ACTIONS */
+        /* MENU */
         .menu-actions { display: none; grid-template-columns: 1fr 1fr; gap: 15px; }
         .menu-actions.active { display: grid; }
         .btn-menu { background: white; color: var(--primary); border: none; padding: 25px 10px; border-radius: 12px; font-weight: 800; font-size: 1rem; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -45,10 +43,9 @@
         .section { display: none; background: white; color: #333; padding: 20px; border-radius: 15px; animation: slideUp 0.3s; }
         .section.active { display: block; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
         .section h2 { color: var(--primary); font-weight: 900; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
 
-        /* FORM ELEMENTS */
+        /* FORMS */
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
         input, select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; background: #fff; }
@@ -57,17 +54,17 @@
         .btn-action { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: 900; font-size: 1.1rem; color: white; background: var(--primary); margin-top: 10px; }
         .btn-scan { background: #28a745; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         
-        /* LISTES & STOCK */
+        /* LISTES */
         .stock-cat { margin-bottom: 15px; }
         .stock-cat-title { background: #eee; padding: 8px 12px; border-radius: 6px; font-weight: 800; color: #555; margin-bottom: 5px; }
         .stock-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0; align-items: center; }
         .badge { background: var(--primary); color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; }
 
-        /* MODE RAFALE LISTE */
+        /* RAFALE */
         .rafale-list { max-height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 15px 0; border: 1px solid #ddd; }
         .rafale-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 4px solid #28a745; }
 
-        /* SCANNER MODAL */
+        /* MODAL */
         #scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         #reader { width: 100%; max-width: 400px; background: black; border-radius: 12px; overflow: hidden; border: 3px solid white; }
 
@@ -76,13 +73,13 @@
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         
-        /* AUTOCOMPLETE */
+        /* SUGGESTIONS */
         .suggestions { position: relative; }
         .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; z-index: 100; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .suggestion-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; color: #333; }
         .suggestion-item:hover { background: #f0f0f0; }
-
-        /* PREVISION LIST */
+        
+        /* PREVISION */
         .prev-item { display: flex; align-items: center; padding: 10px; background: #f8f9fa; margin-bottom: 5px; border-radius: 6px; }
         .prev-item input { width: 20px; height: 20px; margin-right: 10px; }
     </style>
@@ -100,7 +97,7 @@
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition</p>
+            <p>Maître Guigui Edition (Firestore)</p>
         </div>
 
         <!-- 1. CHOIX MACHINE -->
@@ -116,7 +113,7 @@
         <div id="view-menu" class="menu-actions">
             <button class="btn-menu" onclick="window.nav('stock')">📦 STOCK</button>
             <button class="btn-menu" onclick="window.nav('add')">➕ AJOUTER</button>
-            <button class="menu-btn btn-menu" onclick="window.nav('remove')">➖ RETIRER</button>
+            <button class="btn-menu" onclick="window.nav('remove')">➖ RETIRER</button>
             <button class="btn-menu" onclick="window.nav('prev')">📊 PRÉVISION</button>
             <button class="btn-menu btn-rafale" onclick="window.nav('rafale')">🔫 MAGASINIER</button>
         </div>
@@ -158,7 +155,7 @@
                 <input type="number" id="add_qty" value="1" style="text-align:center; font-size:1.5rem; font-weight:bold;">
             </div>
 
-            <button class="btn-action" onclick="window.commitAdd()">VALIDER</button>
+            <button id="btn-valid-add" class="btn-action" onclick="window.commitAdd()">VALIDER L'ENTRÉE</button>
             <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="window.goBack()">Annuler</button>
         </div>
 
@@ -215,15 +212,17 @@
 
     </div>
 
-    <!-- FIREBASE MODULE -->
+    <!-- FIREBASE FIRESTORE MODULE -->
     <script type="module">
+        // IMPORT FIRESTORE (LA MEME QUE TON AUTRE APP)
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-        import { getDatabase, ref, set, get, onValue, child } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
-        // --- CONFIG ---
-        const firebaseConfig = { apiKey: "AIzaSyDR1T9ss36NFuQWvq3ypwf7nUcqRhq5dQ8", authDomain: "maintenance-c2mi.firebaseapp.com", databaseURL: "https://maintenance-c2mi-default-rtdb.firebaseio.com", projectId: "maintenance-c2mi", storageBucket: "maintenance-c2mi.firebasestorage.app", messagingSenderId: "224545367081", appId: "1:224545367081:web:378d28b892528754c6a838" };
+        // CONFIG (Ne touche pas)
+        const firebaseConfig = { apiKey: "AIzaSyDR1T9ss36NFuQWvq3ypwf7nUcqRhq5dQ8", authDomain: "maintenance-c2mi.firebaseapp.com", projectId: "maintenance-c2mi", storageBucket: "maintenance-c2mi.firebasestorage.app", messagingSenderId: "224545367081", appId: "1:224545367081:web:378d28b892528754c6a838" };
+        
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        const db = getFirestore(app); // Utilisation de Firestore
 
         // --- DONNEES MAITRES ---
         const DB_ENGINS = {
@@ -235,9 +234,11 @@
             "ACX": ["ACX 01", "ACX 02"]
         };
 
+        // Catégories par défaut
         let CATEGORIES = {
-            'filtration': { name: 'Filtration', types: ['Filtre Huile', 'Filtre Gasoil', 'Filtre Air'] },
-            'freinage': { name: 'Freinage', types: ['Plaquettes', 'Disques'] }
+            'filtration': { name: 'Filtration', types: ['Filtre Huile', 'Filtre Gasoil', 'Filtre Air', 'Filtre Habitacle', 'Pré-Filtre'] },
+            'freinage': { name: 'Freinage', types: ['Plaquettes', 'Disques'] },
+            'moteur': { name: 'Moteur', types: ['Courroie', 'Bougie'] }
         };
 
         let currentMachine = "";
@@ -246,10 +247,9 @@
         let scanMode = ""; 
         let rafaleBuffer = [];
         let removeBuffer = [];
+        let unsubscribe = null; // Pour arrêter l'écoute Firestore
 
-        // --- GLOBAL FUNCTIONS ---
-        // ON ATTACHE TOUT A WINDOW POUR EVITER LES BUGS DE SCOPE
-        
+        // --- GLOBAL FUNCTIONS (WINDOW) ---
         window.onload = () => {
             renderMachines();
             loadCategories();
@@ -270,17 +270,22 @@
             }
         }
 
-        function loadCategories() {
-            const catRef = ref(db, 'categories_stock');
-            onValue(catRef, (snap) => {
-                if(snap.exists()) {
-                    CATEGORIES = snap.val();
+        // Chargement Catégories depuis Firestore
+        async function loadCategories() {
+            try {
+                const docRef = doc(db, "config", "categories_stock");
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    CATEGORIES = docSnap.data();
                 } else {
-                    set(catRef, CATEGORIES);
+                    // Créer le doc s'il n'existe pas
+                    await setDoc(docRef, CATEGORIES);
                 }
                 updateSelects();
-            });
-            updateSelects(); 
+            } catch (e) {
+                console.error("Erreur chargement catégories:", e);
+            }
         }
 
         function updateSelects() {
@@ -303,15 +308,26 @@
             document.getElementById('machine-title').innerText = key;
             document.getElementById('view-menu').classList.add('active');
 
-            // Charger le stock
-            onValue(ref(db, `stock_filtres_v2/${currentMachine}`), (snap) => {
-                stockData = snap.val() || {};
-                renderStock();
+            // ECOUTE TEMPS REEL DU STOCK
+            if(unsubscribe) unsubscribe();
+            
+            // Le document sera stocké dans la collection "stocks" avec l'ID de la machine
+            const stockRef = doc(db, "stocks", currentMachine);
+            
+            unsubscribe = onSnapshot(stockRef, (doc) => {
+                if (doc.exists()) {
+                    stockData = doc.data();
+                } else {
+                    stockData = {}; // Vide si pas encore de stock
+                }
+                // Si on est sur l'écran stock, on rafraichit
+                if(document.getElementById('sec-stock').classList.contains('active')) renderStock();
             });
         };
 
         window.goHome = () => {
             currentMachine = "";
+            if(unsubscribe) unsubscribe();
             document.getElementById('view-machines').style.display = 'grid';
             document.getElementById('machine-nav').classList.remove('active');
             document.getElementById('view-menu').classList.remove('active');
@@ -322,6 +338,7 @@
             document.getElementById('view-menu').classList.remove('active');
             hideAllSections();
             document.getElementById(`sec-${section}`).classList.add('active');
+            if(section === 'stock') renderStock();
             if(section === 'prev') renderPrevList();
             if(section === 'add' || section === 'remove') updateSelects();
         };
@@ -345,10 +362,13 @@
                 const catStock = stockData[catKey] || {};
                 const types = Object.keys(catStock);
                 
-                if(types.length > 0) {
+                // Filtrer les types qui ont vraiment du stock > 0
+                const activeTypes = types.filter(t => Array.isArray(catStock[t]) && catStock[t].length > 0);
+                
+                if(activeTypes.length > 0) {
                     empty = false;
                     let html = `<div class="stock-cat"><div class="stock-cat-title">${CATEGORIES[catKey].name}</div>`;
-                    types.forEach(t => {
+                    activeTypes.forEach(t => {
                         html += `
                             <div class="stock-item">
                                 <span>${t}</span>
@@ -363,7 +383,7 @@
             if(empty) list.innerHTML = "<div style='text-align:center; padding:20px; color:#999'>Stock vide pour cet engin.</div>";
         }
 
-        // --- AJOUT ---
+        // --- AJOUT (AVEC FIRESTORE ARRAY UNION) ---
         window.checkCode = (code) => {
             const item = findItem(code);
             const alertBox = document.getElementById('add_alert');
@@ -418,26 +438,30 @@
                 sugg.appendChild(div);
             });
 
+            // Option Création
             if(val && !matches.includes(inp.value)) {
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
                 div.innerHTML = `<strong>+ Créer "${inp.value}"</strong>`;
-                div.onclick = () => {
+                div.onclick = async () => {
+                    // Ajout local et DB
                     if(!CATEGORIES[cat].types.includes(inp.value)) {
                         CATEGORIES[cat].types.push(inp.value);
-                        set(ref(db, 'categories_stock'), CATEGORIES);
+                        // Update Firestore Config
+                        await setDoc(doc(db, "config", "categories_stock"), CATEGORIES, {merge: true});
                     }
                     sugg.style.display = 'none';
                 };
                 sugg.appendChild(div);
             }
+
             document.addEventListener('click', (e) => {
                 if(e.target !== inp) sugg.style.display = 'none';
             }, {once: true});
         };
 
-        // --- SAUVEGARDE AJOUT ROBUSTE ---
-        window.commitAdd = () => {
+        window.commitAdd = async () => {
+            const btn = document.getElementById('btn-valid-add');
             const cat = document.getElementById('add_cat').value;
             const type = document.getElementById('add_type').value;
             const qty = parseInt(document.getElementById('add_qty').value);
@@ -445,25 +469,54 @@
 
             if(!cat || !type || !qty) return alert("Remplis tout !");
 
-            const path = `stock_filtres_v2/${currentMachine}/${cat}/${type}`;
-            
-            // LECTURE DE LA DB AVANT D'ECRIRE POUR EVITER L'ECRASEMENT
-            get(child(ref(db), path)).then((snapshot) => {
-                let currentList = snapshot.val() || [];
-                // Sécurité : conversion en tableau si bug
-                if(!Array.isArray(currentList)) currentList = Object.values(currentList);
+            btn.disabled = true;
+            btn.innerText = "SAUVEGARDE...";
 
+            try {
+                // Prepare items to add
+                const itemsToAdd = [];
                 for(let i=0; i<qty; i++) {
-                    currentList.push({ code: code, date: new Date().toISOString() });
+                    itemsToAdd.push({ code: code, date: new Date().toISOString() });
                 }
 
-                set(ref(db, path), currentList).then(() => {
-                    alert("✅ Stock ajouté !");
-                    document.getElementById('add_code').value = "";
-                    document.getElementById('add_alert').style.display = 'none';
-                    document.getElementById('add_qty').value = 1;
-                }).catch(err => alert("Erreur sauvegarde: " + err));
-            });
+                // Update Firestore using arrayUnion to append to existing array
+                // Path format: stocks -> machineID -> field "category.type"
+                const docRef = doc(db, "stocks", currentMachine);
+                
+                // On utilise la notation pointée pour cibler la map imbriquée
+                // ex: "filtration.Filtre Air"
+                const fieldPath = `${cat}.${type}`;
+                
+                // On doit récupérer le doc d'abord pour vérifier s'il existe
+                const docSnap = await getDoc(docRef);
+                
+                if (!docSnap.exists()) {
+                    // Si doc n'existe pas, on le crée
+                    const newData = {};
+                    newData[cat] = {};
+                    newData[cat][type] = itemsToAdd;
+                    await setDoc(docRef, newData);
+                } else {
+                    // Si doc existe, on update
+                    const updateData = {};
+                    // arrayUnion ajoute seulement les uniques, mais nos dates sont uniques (ms)
+                    // cependant arrayUnion ne prend pas un tableau d'objets directement
+                    // on doit spread les arguments
+                    updateData[fieldPath] = arrayUnion(...itemsToAdd);
+                    await updateDoc(docRef, updateData);
+                }
+
+                alert("✅ Stock ajouté !");
+                document.getElementById('add_code').value = "";
+                document.getElementById('add_alert').style.display = 'none';
+                document.getElementById('add_qty').value = 1;
+            } catch (err) {
+                console.error(err);
+                alert("Erreur sauvegarde: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "VALIDER L'ENTRÉE";
+            }
         };
 
         // --- SCANNER ---
@@ -551,27 +604,32 @@
 
         window.delRem = (idx) => { removeBuffer.splice(idx, 1); renderRemoveCart(); };
 
-        window.commitRemove = () => {
+        window.commitRemove = async () => {
             if(removeBuffer.length === 0) return;
             
-            // Pour le retrait, on doit aussi lire la DB avant d'écrire pour être sûr
-            // Mais comme c'est complexe de lire plusieurs paths, on fait un par un ou on trust le stockData local rafraichi
-            // Ici méthode sûre : On met à jour un par un
-            
-            let promises = removeBuffer.map(item => {
-                const path = `stock_filtres_v2/${currentMachine}/${item.cat}/${item.type}`;
-                return get(child(ref(db), path)).then(snap => {
-                    let list = snap.val() || [];
-                    for(let i=0; i<item.qty; i++) list.pop();
-                    return set(ref(db, path), list);
+            try {
+                // Pour retirer, on doit lire le tableau, retirer les items, et réécrire le tableau complet
+                // Firestore n'a pas de arrayRemove partiel (il faut l'objet exact)
+                
+                const docRef = doc(db, "stocks", currentMachine);
+                const docSnap = await getDoc(docRef);
+                let data = docSnap.data();
+                
+                removeBuffer.forEach(item => {
+                    const list = data[item.cat][item.type];
+                    // Retire les derniers ajoutés (LIFO)
+                    list.splice(-item.qty); 
+                    data[item.cat][item.type] = list;
                 });
-            });
 
-            Promise.all(promises).then(() => {
+                await setDoc(docRef, data);
+                
                 alert("✅ Stock retiré !");
                 removeBuffer = [];
                 renderRemoveCart();
-            });
+            } catch (e) {
+                alert("Erreur: " + e.message);
+            }
         };
 
         // --- RAFALE ---
@@ -607,41 +665,39 @@
 
         window.clearRafale = () => { rafaleBuffer = []; renderRafale(); };
 
-        window.commitRafale = () => {
+        window.commitRafale = async () => {
             if(rafaleBuffer.length === 0) return;
             
-            // Grouper par type pour minimiser les écritures
-            const updates = {}; // cat|type -> [{code...}]
-
-            rafaleBuffer.forEach(item => {
-                const key = `${item.cat}|${item.type}`;
-                if(!updates[key]) updates[key] = [];
-                updates[key].push({code: item.code, date: new Date().toISOString()});
+            try {
+                const docRef = doc(db, "stocks", currentMachine);
+                const docSnap = await getDoc(docRef);
                 
-                // Save categorie if new
-                if(CATEGORIES[item.cat] && !CATEGORIES[item.cat].types.includes(item.type)) {
-                    CATEGORIES[item.cat].types.push(item.type);
-                    set(ref(db, 'categories_stock'), CATEGORIES);
-                }
-            });
+                let data = {};
+                if(docSnap.exists()) data = docSnap.data();
 
-            // Ecriture Sûre
-            const promises = Object.keys(updates).map(key => {
-                const [cat, type] = key.split('|');
-                const path = `stock_filtres_v2/${currentMachine}/${cat}/${type}`;
-                
-                return get(child(ref(db), path)).then(snap => {
-                    let list = snap.val() || [];
-                    if(!Array.isArray(list)) list = Object.values(list);
-                    list.push(...updates[key]);
-                    return set(ref(db, path), list);
+                rafaleBuffer.forEach(item => {
+                    if(!data[item.cat]) data[item.cat] = {};
+                    if(!data[item.cat][item.type]) data[item.cat][item.type] = [];
+                    
+                    data[item.cat][item.type].push({code: item.code, date: new Date().toISOString()});
+                    
+                    // Update categories if new
+                    if(CATEGORIES[item.cat] && !CATEGORIES[item.cat].types.includes(item.type)) {
+                        CATEGORIES[item.cat].types.push(item.type);
+                    }
                 });
-            });
 
-            Promise.all(promises).then(() => {
-                alert(`✅ Tout est enregistré !`);
+                // Update Categories Config
+                await setDoc(doc(db, "config", "categories_stock"), CATEGORIES, {merge: true});
+                
+                // Update Stock
+                await setDoc(docRef, data, {merge: true});
+
+                alert(`✅ ${rafaleBuffer.length} produits enregistrés !`);
                 window.clearRafale();
-            });
+            } catch(e) {
+                alert("Erreur: " + e.message);
+            }
         };
 
         // --- PREVISION ---
