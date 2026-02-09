@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - MASTER V5</title>
+    <title>C2MI STOCK - MASTER V6</title>
     
     <style>
         :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; --dark: #880e4f; }
@@ -56,7 +56,7 @@
         .btn-scan { background: #28a745; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-cancel { background: #6c757d; margin-top: 10px; }
         
-        /* LISTES */
+        /* LISTES & ETIQUETTES */
         .stock-cat { margin-bottom: 15px; background: #f9f9f9; border-radius: 8px; overflow: hidden; }
         .stock-cat-title { background: #eee; padding: 10px; font-weight: 800; color: #555; font-size: 0.9rem; text-transform: uppercase;}
         .stock-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; align-items: center; }
@@ -66,6 +66,22 @@
 
         .rafale-list { max-height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 15px 0; border: 1px solid #ddd; }
         .rafale-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 4px solid #28a745; align-items: center; }
+
+        /* PREVISION - TIMELINE */
+        .prev-machine-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .prev-machine-name { font-weight: bold; font-size: 0.9rem; }
+        .prev-date-input { padding: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 0.9rem; width: 140px; }
+        
+        .timeline { margin-top: 20px; border-left: 3px solid #ddd; padding-left: 20px; margin-left: 10px; }
+        .timeline-event { position: relative; margin-bottom: 20px; }
+        .timeline-event::before { content: ''; position: absolute; left: -26px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #ccc; }
+        .timeline-event.danger::before { background: #dc3545; box-shadow: 0 0 5px #dc3545; }
+        .timeline-event.ok::before { background: #28a745; }
+        
+        .timeline-date { font-weight: 800; font-size: 0.9rem; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+        .timeline-card { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .timeline-card.alert-card { border-left: 5px solid #dc3545; background: #fff5f5; }
+        .timeline-card.ok-card { border-left: 5px solid #28a745; }
 
         /* MODAL */
         #scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
@@ -100,7 +116,7 @@
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition V5</p>
+            <p>Maître Guigui Edition V6</p>
         </div>
 
         <div id="view-machines" class="grid-machines"></div>
@@ -114,7 +130,7 @@
             <button class="btn-menu" onclick="nav('stock')">📦 STOCK</button>
             <button class="btn-menu" onclick="nav('add')">➕ AJOUTER</button>
             <button class="menu-btn btn-menu" onclick="nav('remove')">➖ RETIRER</button>
-            <button class="btn-menu" onclick="nav('prev')">📊 PRÉVISION</button>
+            <button class="btn-menu" onclick="nav('prev')">🔮 PRÉVISION</button>
             <button class="btn-menu btn-rafale" onclick="nav('rafale')">🔫 MAGASINIER</button>
         </div>
 
@@ -143,7 +159,7 @@
             <div style="text-align:center; margin:10px 0; font-style:italic; color:#ddd;">— OU —</div>
 
             <div class="form-group">
-                <label>1. Choisir Catégorie (Stock Reel)</label>
+                <label>1. Choisir Catégorie</label>
                 <select id="rem_cat" onchange="updateTypesRemove()">
                     <option value="">-- D'abord, choisir ici --</option>
                 </select>
@@ -182,10 +198,19 @@
         </div>
 
         <div id="sec-prev" class="section">
-            <div class="section-header"><h2>📊 Prévisions</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
-            <div id="prev-engins-list" style="margin-bottom:20px"></div>
-            <button class="btn-action" onclick="calcPrev()">CALCULER</button>
-            <div id="prev-res" style="margin-top:20px"></div>
+            <div class="section-header"><h2>🔮 Le Visionnaire</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
+            
+            <div class="alert" style="background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; font-size:0.9rem;">
+                ℹ️ Rentre la date de <strong>dernière maintenance</strong> (ou rentrée). Le système calcule +6 mois auto.
+            </div>
+
+            <div id="prev-engins-list" style="margin-bottom:20px; max-height:300px; overflow-y:auto;">
+                </div>
+            
+            <button class="btn-action" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);" onclick="calcPrev()">🔮 LANCER LA PROPHÉTIE</button>
+            
+            <div id="prev-timeline" class="timeline"></div>
+
             <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
@@ -207,13 +232,15 @@
             "ACX": ["ACX 01", "ACX 02"]
         };
 
+        // AJOUT DU PREFILTRE DANS LES BASIQUES
         let CATEGORIES = {
-            'filtration': { name: 'Filtration', types: ['Filtre Huile', 'Filtre Gasoil', 'Filtre Air'] },
+            'filtration': { name: 'Filtration', types: ['Filtre Huile', 'Filtre Gasoil', 'Préfiltre', 'Filtre Air'] },
             'freinage': { name: 'Freinage', types: ['Plaquettes', 'Disques'] }
         };
 
         let currentMachine = "";
         let stockData = {};
+        let maintenanceDates = {}; // Pour stocker les dates
         let scanner = null;
         let scanMode = ""; 
         let rafaleBuffer = [];
@@ -262,9 +289,8 @@
         // NAVIGATION & ISOLATION
         function selectMachine(key) {
             currentMachine = key;
-            
-            // --- ISOLATION TOTALE ICI ---
-            stockData = {}; // On vide la mémoire locale avant de charger la nouvelle
+            stockData = {};
+            maintenanceDates = {}; // Reset dates
             
             document.getElementById('view-machines').style.display = 'none';
             document.getElementById('machine-nav').classList.add('active');
@@ -272,19 +298,23 @@
             document.getElementById('view-menu').classList.add('active');
 
             if(unsubscribe) unsubscribe();
-            // On écoute UNIQUEMENT le document de la machine sélectionnée
+            // Charger Stock
             unsubscribe = db.collection("stocks").doc(currentMachine).onSnapshot((doc) => {
                 stockData = doc.exists ? doc.data() : {};
-                // Si l'utilisateur est sur une page qui dépend du stock, on rafraichit
                 if(document.getElementById('sec-stock').classList.contains('active')) renderStock();
                 if(document.getElementById('sec-remove').classList.contains('active')) initRemoveSelects();
+            });
+
+            // Charger Dates Maintenance
+            db.collection("maintenance").doc(currentMachine).get().then(doc => {
+                if(doc.exists) maintenanceDates = doc.data();
             });
         }
 
         function goHome() {
             if(unsubscribe) unsubscribe();
             currentMachine = "";
-            stockData = {}; // On vide en sortant aussi
+            stockData = {}; 
             document.getElementById('view-machines').style.display = 'grid';
             document.getElementById('machine-nav').classList.remove('active');
             document.getElementById('view-menu').classList.remove('active');
@@ -299,7 +329,7 @@
             if(section === 'stock') renderStock();
             if(section === 'prev') renderPrevList();
             if(section === 'add') updateSelectsAdd();
-            if(section === 'remove') initRemoveSelects(); // Nouvelle fonction pour charger les stocks dispos
+            if(section === 'remove') initRemoveSelects();
         }
 
         function goBack() {
@@ -311,7 +341,7 @@
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         }
 
-        // --- AFFICHAGE STOCK AVEC ETIQUETTE ---
+        // --- AFFICHAGE STOCK ---
         function renderStock() {
             const list = document.getElementById('stock-list');
             list.innerHTML = "";
@@ -334,7 +364,6 @@
                         
                         let html = `<div class="stock-cat"><div class="stock-cat-title">${prettyName}</div>`;
                         activeTypes.forEach(t => {
-                            // ETIQUETTE AUTOMATIQUE AJOUTÉE ICI
                             html += `
                                 <div class="stock-item">
                                     <div>
@@ -352,7 +381,7 @@
             if(!somethingDisplayed) list.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>Stock vide.</div>";
         }
 
-        // --- LOGIQUE D'AJOUT (inchangée mais sécurisée) ---
+        // --- AJOUT ---
         function newCategory() {
             const nom = prompt("Nom de la catégorie ?");
             if(!nom) return;
@@ -438,9 +467,7 @@
                 .catch(e => alert("Erreur: " + e.message));
         }
 
-        // --- NOUVELLE LOGIQUE RETRAIT (INTELLIGENTE) ---
-        
-        // 1. Initialiser le premier select avec les catégories qui ont du stock
+        // --- RETRAIT ---
         function initRemoveSelects() {
             const catSelect = document.getElementById('rem_cat');
             catSelect.innerHTML = '<option value="">-- Choisir Catégorie --</option>';
@@ -450,7 +477,6 @@
             if (!stockData) return;
 
             for(let cat in stockData) {
-                // On vérifie s'il y a vraiment du stock dedans
                 if (typeof stockData[cat] === 'object' && stockData[cat] !== null) {
                     const hasItems = Object.keys(stockData[cat]).some(type => stockData[cat][type].length > 0);
                     if (hasItems) {
@@ -461,7 +487,6 @@
             }
         }
 
-        // 2. Quand on choisit une cat, on remplit les pièces dispos
         function updateTypesRemove() {
             const cat = document.getElementById('rem_cat').value;
             const typeSelect = document.getElementById('rem_type');
@@ -479,12 +504,9 @@
                 }
             }
             
-            // Écouteur pour mettre à jour la quantité max quand on choisit la pièce
             typeSelect.onchange = function() {
                 const t = this.value;
-                if(t && stockData[cat][t]) {
-                    document.getElementById('rem_max').innerText = stockData[cat][t].length;
-                }
+                if(t && stockData[cat][t]) document.getElementById('rem_max').innerText = stockData[cat][t].length;
             };
         }
 
@@ -494,20 +516,15 @@
             const qty = parseInt(document.getElementById('rem_qty').value);
             
             if(!cat || !type) return alert("Choisis une pièce !");
-            
-            // Vérif stock réel
             const dispo = stockData[cat][type].length;
             if (qty > dispo) return alert("Pas assez de stock ! Max: " + dispo);
 
             addToRemoveCart(cat, type, qty);
-            
-            // Reset visuel
             document.getElementById('rem_cat').value = "";
             updateTypesRemove();
             document.getElementById('rem_qty').value = "1";
         }
 
-        // Le reste (Code barres, Panier...) reste compatible
         function checkCode(code) {
             if (!stockData) return;
             for(let c in stockData) {
@@ -550,8 +567,6 @@
                 setTimeout(() => scanner.resume(), 1500);
             } else if(scanMode === 'remove') {
                 closeScanner();
-                // Ici on pourrait auto-remplir les selects si on scanne un code existant
-                // Pour l'instant je laisse le comportement par défaut
                 checkCodeRemove(code);
             }
         }
@@ -571,11 +586,8 @@
                 }
             } catch(e) { console.error(e); }
 
-            if(found) {
-                addToRemoveCart(found.cat, found.type, 1);
-            } else {
-                alert("Code inconnu pour " + currentMachine);
-            }
+            if(found) addToRemoveCart(found.cat, found.type, 1);
+            else alert("Code inconnu pour " + currentMachine);
         }
 
         function addToRemoveCart(cat, type, qty) {
@@ -623,7 +635,6 @@
                 alert("✅ Retiré du stock " + currentMachine + " !");
                 removeBuffer = [];
                 renderRemoveCart();
-                // Refresh des selects pour mettre à jour les quantités dispo
                 initRemoveSelects();
             }).catch(e => alert("Erreur: " + e));
         }
@@ -681,28 +692,112 @@
             });
         }
 
+        // --- NOUVELLE LOGIQUE PREVISION (TIMELINE) ---
         function renderPrevList() {
             const d = document.getElementById('prev-engins-list');
             d.innerHTML = "";
-            DB_ENGINS[currentMachine].forEach((n, i) => {
-                d.innerHTML += `<div class="prev-item"><input type="checkbox" id="chk_${i}"><label for="chk_${i}">${n}</label></div>`;
+            const engins = DB_ENGINS[currentMachine] || [];
+            
+            engins.forEach((name, i) => {
+                // On récupère la date enregistrée ou vide
+                const savedDate = maintenanceDates[name] || "";
+                
+                d.innerHTML += `
+                    <div class="prev-machine-row">
+                        <span class="prev-machine-name">${name}</span>
+                        <input type="date" class="prev-date-input" id="date_${i}" value="${savedDate}" onchange="saveDate('${name}', this.value)">
+                    </div>
+                `;
             });
         }
 
+        function saveDate(machineName, dateVal) {
+            maintenanceDates[machineName] = dateVal;
+            // On sauvegarde direct dans Firebase pour pas perdre
+            db.collection("maintenance").doc(currentMachine).set(maintenanceDates, {merge:true});
+        }
+
         function calcPrev() {
-            let count = 0;
-            DB_ENGINS[currentMachine].forEach((_, i) => { if(document.getElementById(`chk_${i}`).checked) count++; });
-            if(!count) return alert("Sélectionne un engin !");
+            const timelineDiv = document.getElementById('prev-timeline');
+            timelineDiv.innerHTML = "";
+
+            // 1. Récupérer les Stocks Actuels
+            // On cherche "Filtre Huile", "Filtre Gasoil", "Préfiltre", "Filtre Air" dans la cat "filtration"
+            // Note: Si l'utilisateur les a nommés autrement, il faudra adapter. On suppose les noms standards.
+            let stocks = {
+                'Huile': stockData['filtration']?.['Filtre Huile']?.length || 0,
+                'Gasoil': stockData['filtration']?.['Filtre Gasoil']?.length || 0,
+                'Air': stockData['filtration']?.['Filtre Air']?.length || 0,
+                'Préfiltre': stockData['filtration']?.['Préfiltre']?.length || 0
+            };
+
+            // 2. Calculer les événements sur 12 mois
+            const events = [];
+            const engins = DB_ENGINS[currentMachine] || [];
             
-            const d = document.getElementById('prev-res');
-            let h = "";
-            (CATEGORIES['filtration']?.types || []).forEach(t => {
-                const s = stockData['filtration']?.[t]?.length || 0;
-                const m = Math.max(0, count - s);
-                const c = m > 0 ? "#f8d7da" : "#d4edda";
-                h += `<div style="background:${c};padding:10px;margin:5px;border-radius:5px;"><strong>${t}</strong>: ${m>0 ? '❌ Manque '+m : '✅ OK'} (${s})</div>`;
+            engins.forEach(name => {
+                const dateStr = maintenanceDates[name];
+                if(dateStr) {
+                    const lastMaint = new Date(dateStr);
+                    // Règle des 6 mois
+                    const nextMaint = new Date(lastMaint);
+                    nextMaint.setMonth(nextMaint.getMonth() + 6);
+                    
+                    // Si la date est dans le futur (ou très proche passé)
+                    events.push({ 
+                        date: nextMaint, 
+                        machine: name, 
+                        type: 'maintenance' 
+                    });
+                }
             });
-            d.innerHTML = h;
+
+            // Trier par date
+            events.sort((a, b) => a.date - b.date);
+
+            // 3. Générer la Timeline
+            if(events.length === 0) {
+                timelineDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#999;'>Aucune date de maintenance renseignée.</div>";
+                return;
+            }
+
+            // Mois en français
+            const months = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+
+            events.forEach(evt => {
+                // Consommer le stock virtuel
+                stocks['Huile']--;
+                stocks['Gasoil']--;
+                stocks['Air']--;
+                stocks['Préfiltre']--;
+
+                // Vérifier si rupture
+                const missing = [];
+                if(stocks['Huile'] < 0) missing.push("Huile");
+                if(stocks['Gasoil'] < 0) missing.push("Gasoil");
+                if(stocks['Air'] < 0) missing.push("Air");
+                if(stocks['Préfiltre'] < 0) missing.push("Préfiltre");
+
+                const isDanger = missing.length > 0;
+                const datePretty = `${months[evt.date.getMonth()]} ${evt.date.getFullYear()}`;
+                
+                let html = `
+                    <div class="timeline-event ${isDanger ? 'danger' : 'ok'}">
+                        <div class="timeline-date">${datePretty}</div>
+                        <div class="timeline-card ${isDanger ? 'alert-card' : 'ok-card'}">
+                            <strong>${evt.machine}</strong> arrive à l'atelier.
+                            <br>
+                `;
+
+                if(isDanger) {
+                    html += `<span style="color:#dc3545; font-weight:bold;">⚠️ STOCK INSUFFISANT !</span><br>Manque : ${missing.join(', ')}`;
+                } else {
+                    html += `<span style="color:#28a745; font-weight:bold;">✅ Stock OK</span>`;
+                }
+
+                html += `</div></div>`;
+                timelineDiv.innerHTML += html;
+            });
         }
     </script>
 </body>
