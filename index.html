@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - MASTER V8</title>
+    <title>C2MI STOCK - MASTER V9</title>
     
     <style>
         :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; --dark: #880e4f; }
@@ -50,6 +50,7 @@
         label { display: block; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
         input, select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; background: #fff; }
         input:focus { border-color: var(--primary); outline: none; }
+        input:disabled { background: #e9ecef; cursor: not-allowed; } /* Style désactivé visible */
         
         .btn-action { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: 900; font-size: 1.1rem; color: white; background: var(--primary); margin-top: 10px; cursor: pointer; transition: background 0.2s; }
         .btn-action:active { transform: scale(0.98); }
@@ -67,7 +68,7 @@
         .rafale-list { max-height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 15px 0; border: 1px solid #ddd; }
         .rafale-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 4px solid #28a745; align-items: center; }
 
-        /* GESTION CATEGORIES (NOUVEAU) */
+        /* GESTION CATEGORIES */
         .cat-manager-item { display: flex; justify-content: space-between; align-items: center; background: white; border: 1px solid #eee; padding: 10px; margin-bottom: 5px; border-radius: 6px; }
         .btn-delete-cat { background: #dc3545; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-weight: bold; }
 
@@ -126,7 +127,7 @@
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition V8 (Nettoyeur)</p>
+            <p>Maître Guigui Edition V9 (Débloquée)</p>
         </div>
 
         <div id="view-machines" class="grid-machines"></div>
@@ -356,7 +357,7 @@
             }
             if(section === 'add') updateSelectsAdd();
             if(section === 'remove') initRemoveSelects();
-            if(section === 'rafale') renderCategoryManager(); // Charge la liste pour suppression
+            if(section === 'rafale') renderCategoryManager();
         }
 
         function goBack() {
@@ -368,7 +369,7 @@
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         }
 
-        // --- GESTION CATEGORIES (NEW V8) ---
+        // --- GESTION CATEGORIES ---
         function renderCategoryManager() {
             const list = document.getElementById('cat-manager-list');
             list.innerHTML = "";
@@ -386,12 +387,11 @@
         function deleteCategory(key) {
             if(confirm("⚠️ T'es sûr de vouloir supprimer cette catégorie ?")) {
                 delete CATEGORIES[key];
-                // Mise à jour Firebase
                 db.collection("config").doc("categories_stock").set(CATEGORIES)
                     .then(() => {
                         alert("Catégorie supprimée !");
                         renderCategoryManager();
-                        updateSelectsAdd(); // Refresh les selects
+                        updateSelectsAdd();
                     });
             }
         }
@@ -436,7 +436,7 @@
             if(!somethingDisplayed) list.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>Stock vide.</div>";
         }
 
-        // --- AJOUT ---
+        // --- AJOUT ET FIX DU BUG D'INPUT ---
         function newCategory() {
             const nom = prompt("Nom de la catégorie ?");
             if(!nom) return;
@@ -446,14 +446,20 @@
                 .then(() => { 
                     alert("✅ Catégorie créée !"); 
                     updateSelectsAdd(); 
-                    setTimeout(() => document.getElementById('add_cat').value = id, 100);
+                    // LE FIX EST ICI : On attend que le select se mette à jour
+                    setTimeout(() => {
+                        const select = document.getElementById('add_cat');
+                        select.value = id;
+                        // IMPORTANT : On force le déverrouillage de l'input
+                        updateTypesAdd(); 
+                    }, 100);
                 });
         }
 
         function updateTypesAdd() {
             const cat = document.getElementById(`add_cat`).value;
             const inp = document.getElementById(`add_type`);
-            inp.disabled = !cat;
+            inp.disabled = !cat; // Si une cat est choisie, on active
             inp.value = "";
         }
 
@@ -767,7 +773,7 @@
         function saveDate(machineName, dateVal) {
             maintenanceDates[machineName] = dateVal;
             db.collection("maintenance").doc(currentMachine).set(maintenanceDates, {merge:true});
-            updateOracle(); // Recalcul auto
+            updateOracle();
         }
 
         function updateOracle() {
