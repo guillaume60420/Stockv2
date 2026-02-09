@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - TERMINATOR</title>
+    <title>C2MI STOCK - MASTER V2</title>
     
     <!-- 1. STYLE (CSS) -->
     <style>
-        :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; }
+        :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; --dark: #880e4f; }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--primary); color: white; padding-bottom: 100px; }
         .container { max-width: 800px; margin: 0 auto; padding: 15px; }
@@ -19,17 +19,18 @@
         /* MACHINES */
         .grid-machines { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .card-machine { background: white; color: #333; padding: 20px; border-radius: 12px; text-align: center; cursor: pointer; transition: transform 0.1s; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
-        .card-machine:active { transform: scale(0.96); }
+        .card-machine:active { transform: scale(0.96); background: #f0f0f0; }
         .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
         .name { font-weight: 800; color: var(--primary); text-transform: uppercase; font-size: 0.9rem; }
 
-        /* NAVIGATION */
-        .nav-bar { display: none; background: white; padding: 10px; border-radius: 12px; margin-bottom: 20px; justify-content: space-between; align-items: center; color: var(--primary); }
+        /* NAVIGATION BAR (Visible quand on est dans une machine) */
+        .nav-bar { display: none; background: white; padding: 12px; border-radius: 12px; margin-bottom: 20px; justify-content: space-between; align-items: center; color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .nav-bar.active { display: flex; }
-        .nav-title { font-weight: 900; font-size: 1.2rem; }
-        .btn-mini { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .nav-title { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; }
+        .btn-mini { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .btn-mini:active { transform: scale(0.95); }
 
-        /* MENU */
+        /* MENU ACTIONS */
         .menu-actions { display: none; grid-template-columns: 1fr 1fr; gap: 15px; }
         .menu-actions.active { display: grid; }
         .btn-menu { background: white; color: var(--primary); border: none; padding: 25px 10px; border-radius: 12px; font-weight: 800; font-size: 1rem; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -40,21 +41,31 @@
         .section { display: none; background: white; color: #333; padding: 20px; border-radius: 15px; animation: slideUp 0.3s; }
         .section.active { display: block; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .section h2 { color: var(--primary); font-weight: 900; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .section h2 { color: var(--primary); font-weight: 900; margin: 0; font-size: 1.4rem; }
+        .btn-back-icon { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6c757d; }
 
         /* INPUTS */
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
         input, select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; background: #fff; }
+        input:focus { border-color: var(--primary); outline: none; }
         
-        .btn-action { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: 900; font-size: 1.1rem; color: white; background: var(--primary); margin-top: 10px; cursor: pointer; }
+        .btn-action { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: 900; font-size: 1.1rem; color: white; background: var(--primary); margin-top: 10px; cursor: pointer; transition: background 0.2s; }
+        .btn-action:active { transform: scale(0.98); }
         .btn-scan { background: #28a745; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-cancel { background: #6c757d; margin-top: 10px; }
         
         /* LISTES */
-        .stock-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0; align-items: center; }
+        .stock-cat { margin-bottom: 15px; background: #f9f9f9; border-radius: 8px; overflow: hidden; }
+        .stock-cat-title { background: #eee; padding: 10px; font-weight: 800; color: #555; font-size: 0.9rem; }
+        .stock-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; align-items: center; }
+        .stock-item:last-child { border-bottom: none; }
         .badge { background: var(--primary); color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; }
+        
         .rafale-list { max-height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 15px 0; border: 1px solid #ddd; }
-        .rafale-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 4px solid #28a745; }
+        .rafale-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 4px solid #28a745; align-items: center; }
 
         /* MODAL */
         #scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
@@ -62,16 +73,17 @@
 
         /* ALERT */
         .alert { padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; text-align: center; }
-        .alert-success { background: #d4edda; color: #155724; }
-        .alert-danger { background: #f8d7da; color: #721c24; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         
         /* AUTOCOMPLETE */
-        .suggestions-list { background: white; border: 1px solid #ddd; max-height: 150px; overflow-y: auto; display: none; position: absolute; width: 100%; z-index: 100; }
-        .suggestion-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .suggestions-list { background: white; border: 1px solid #ddd; max-height: 150px; overflow-y: auto; display: none; position: absolute; width: 100%; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .suggestion-item:active { background: #f0f0f0; }
         .suggestions { position: relative; }
     </style>
 
-    <!-- 2. LIBRAIRIES ROBUSTES (COMPATIBILITE MAXIMALE) -->
+    <!-- 2. LIBRAIRIES ROBUSTES -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -83,25 +95,25 @@
     <div id="scanner-modal">
         <h2 style="color:white; margin-bottom:20px;">📷 VISE LE CODE</h2>
         <div id="reader"></div>
-        <button onclick="closeScanner()" class="btn-action" style="background:#dc3545; margin-top:20px; max-width:200px;">FERMER</button>
+        <button onclick="closeScanner()" class="btn-action" style="background:#dc3545; margin-top:20px; max-width:200px;">FERMER ❌</button>
     </div>
 
     <div class="container">
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition</p>
+            <p>Maître Guigui Edition V2</p>
         </div>
 
         <!-- 1. ACCUEIL MACHINES -->
         <div id="view-machines" class="grid-machines">
-            <!-- JS va remplir ça -->
+            <!-- Rempli par JS -->
         </div>
 
-        <!-- BARRE NAVIGATION -->
+        <!-- BARRE NAVIGATION MACHINE (Visible quand on est dans un engin) -->
         <div id="machine-nav" class="nav-bar">
             <span class="nav-title" id="machine-title">--</span>
-            <button class="btn-mini" onclick="goHome()">Changer</button>
+            <button class="btn-mini" onclick="goHome()">🏠 ACCUEIL</button>
         </div>
 
         <!-- 2. MENU ACTIONS -->
@@ -117,14 +129,21 @@
 
         <!-- STOCK -->
         <div id="sec-stock" class="section">
-            <h2>📦 Inventaire</h2>
+            <div class="section-header">
+                <h2>📦 Inventaire</h2>
+                <button class="btn-back-icon" onclick="goBack()">🔙</button>
+            </div>
             <div id="stock-list">Chargement...</div>
-            <button class="btn-action" style="background:#6c757d" onclick="goBack()">Retour Menu</button>
+            <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
         <!-- AJOUTER -->
         <div id="sec-add" class="section">
-            <h2>➕ Entrée Stock</h2>
+            <div class="section-header">
+                <h2>➕ Entrée Stock</h2>
+                <button class="btn-back-icon" onclick="goBack()">🔙</button>
+            </div>
+            
             <button class="btn-action btn-scan" onclick="startScanner('add')">📷 SCANNER</button>
             
             <div class="form-group">
@@ -154,47 +173,81 @@
             </div>
 
             <button id="btn-add-valid" class="btn-action" onclick="commitAdd()">VALIDER L'ENTRÉE</button>
-            <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="goBack()">Annuler</button>
+            <button class="btn-action btn-cancel" onclick="goBack()">ANNULER</button>
         </div>
 
         <!-- RETIRER -->
         <div id="sec-remove" class="section">
-            <h2>➖ Sortie Stock</h2>
+            <div class="section-header">
+                <h2>➖ Sortie Stock</h2>
+                <button class="btn-back-icon" onclick="goBack()">🔙</button>
+            </div>
+
             <button class="btn-action btn-scan" onclick="startScanner('remove')">📷 SCANNER SORTIE</button>
-            <div class="form-group"><label>Code (si manuel)</label><input type="text" id="rem_code" oninput="checkCodeRemove(this.value)"></div>
-            <div id="rem_cart" class="rafale-list"><div style="text-align:center; color:#999; padding:20px;">Panier vide</div></div>
-            <button class="btn-action" onclick="commitRemove()">VALIDER SORTIE</button>
-            <hr style="margin:20px 0;">
-            <h3>Manuel</h3>
-            <div class="form-group"><select id="rem_cat" onchange="updateTypes('rem')"></select></div>
-            <div class="form-group suggestions"><input type="text" id="rem_type" disabled oninput="filterTypes('rem')"><div id="rem_sugg" class="suggestions-list"></div></div>
-            <div class="form-group"><input type="number" id="rem_qty" value="1"></div>
-            <button class="btn-action" style="background:#17a2b8" onclick="manualRemoveAdd()">Ajouter</button>
-            <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="goBack()">Retour</button>
+            
+            <div class="form-group">
+                <label>Code (si manuel)</label>
+                <input type="text" id="rem_code" oninput="checkCodeRemove(this.value)" placeholder="Scannez ou tapez le code...">
+            </div>
+
+            <h3 style="margin-bottom:10px; color:#666; font-size:1rem;">Panier de retrait :</h3>
+            <div id="rem_cart" class="rafale-list">
+                <div style="text-align:center; color:#999; padding:20px;">Panier vide</div>
+            </div>
+
+            <button class="btn-action" onclick="commitRemove()">VALIDER LA SORTIE</button>
+            
+            <hr style="margin:20px 0; border:0; border-top:1px dashed #ccc;">
+            
+            <h3 style="color:#666; font-size:1rem;">Ajout Manuel (Sans Code)</h3>
+            <div class="form-group">
+                <select id="rem_cat" onchange="updateTypes('rem')"></select>
+            </div>
+            <div class="form-group suggestions">
+                <input type="text" id="rem_type" disabled oninput="filterTypes('rem')" placeholder="Nom de la pièce...">
+                <div id="rem_sugg" class="suggestions-list"></div>
+            </div>
+            <div class="form-group">
+                <input type="number" id="rem_qty" value="1" placeholder="Qté">
+            </div>
+            <button class="btn-action" style="background:#17a2b8" onclick="manualRemoveAdd()">Ajouter Manuellement</button>
+
+            <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
         <!-- RAFALE -->
         <div id="sec-rafale" class="section">
-            <h2>🔫 Mode Rafale</h2>
+            <div class="section-header">
+                <h2>🔫 Mode Rafale</h2>
+                <button class="btn-back-icon" onclick="goBack()">🔙</button>
+            </div>
+
             <button class="btn-action btn-scan" onclick="startScanner('rafale')">🚀 DÉMARRER</button>
-            <div id="rafale-list" class="rafale-list"><div style="text-align:center; padding:20px; color:#aaa;">En attente...</div></div>
+            
+            <div id="rafale-list" class="rafale-list">
+                <div style="text-align:center; padding:20px; color:#aaa;">En attente...</div>
+            </div>
+
             <button class="btn-action" onclick="commitRafale()">ENREGISTRER TOUT ✅</button>
-            <button class="btn-action" style="background:#dc3545; margin-top:10px" onclick="clearRafale()">Vider</button>
-            <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="goBack()">Retour</button>
+            <button class="btn-action" style="background:#dc3545; margin-top:10px" onclick="clearRafale()">VIDER LA LISTE</button>
+            <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
         <!-- PREVISION -->
         <div id="sec-prev" class="section">
-            <h2>📊 Prévisions</h2>
+            <div class="section-header">
+                <h2>📊 Prévisions</h2>
+                <button class="btn-back-icon" onclick="goBack()">🔙</button>
+            </div>
             <div id="prev-engins-list" style="margin-bottom:20px"></div>
             <button class="btn-action" onclick="calcPrev()">CALCULER</button>
             <div id="prev-res" style="margin-top:20px"></div>
-            <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="goBack()">Retour</button>
+            <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
     </div>
 
-    <!-- 3. SCRIPT PRINCIPAL (CLASSIQUE, PAS DE MODULE) -->
+    <!-- 3. SCRIPT PRINCIPAL -->
     <script>
         // CONFIG FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyDR1T9ss36NFuQWvq3ypwf7nUcqRhq5dQ8", authDomain: "maintenance-c2mi.firebaseapp.com", projectId: "maintenance-c2mi", storageBucket: "maintenance-c2mi.firebasestorage.app", messagingSenderId: "224545367081", appId: "1:224545367081:web:378d28b892528754c6a838" };
@@ -236,8 +289,7 @@
             const icons = { "4' AXE": "🚂", "ELAN": "🚅", "SKYRAILLER": "🚄", "Pelle UNAC 22 TRR": "🏗️", "Debroussailleuse R/R": "🌿", "ACX": "🚆" };
             
             for(let key in DB_ENGINS) {
-                // LA CORRECTION FATALE EST ICI : .replace(/'/g, "\\'")
-                // On échappe l'apostrophe pour que le JS ne plante pas
+                // ECHAPPEMENT DE L'APOSTROPHE
                 const safeKey = key.replace(/'/g, "\\'");
                 grid.innerHTML += `
                     <div class="card-machine" onclick="selectMachine('${safeKey}')">
@@ -254,7 +306,6 @@
                 else db.collection("config").doc("categories_stock").set(CATEGORIES);
                 updateSelects();
             }).catch((error) => {
-                console.log("Erreur chargement cat, utilisation defaut", error);
                 updateSelects();
             });
         }
@@ -338,15 +389,15 @@
 
                 if(activeTypes.length > 0) {
                     empty = false;
-                    let html = `<div style="margin-bottom:15px;"><div style="background:#eee; padding:8px; font-weight:bold; color:#555; border-radius:5px;">${CATEGORIES[catKey].name}</div>`;
+                    let html = `<div class="stock-cat"><div class="stock-cat-title">${CATEGORIES[catKey].name}</div>`;
                     activeTypes.forEach(t => {
-                        html += `<div class="stock-item"><span>${t}</span><span class="badge" style="background:#E30066; color:white; padding:2px 8px; border-radius:10px;">${catStock[t].length}</span></div>`;
+                        html += `<div class="stock-item"><span>${t}</span><span class="badge">${catStock[t].length}</span></div>`;
                     });
                     html += `</div>`;
                     list.innerHTML += html;
                 }
             }
-            if(empty) list.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>Vide</div>";
+            if(empty) list.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>Stock vide pour cet engin.</div>";
         }
 
         // AJOUT
@@ -391,7 +442,6 @@
                 };
                 sugg.appendChild(div);
             }
-            // Close onclick outside
             setTimeout(() => document.addEventListener('click', e => { if(e.target !== inp) sugg.style.display = 'none'; }, {once:true}), 100);
         }
 
@@ -422,7 +472,6 @@
             for(let i=0; i<qty; i++) items.push({code: code, date: new Date().toISOString()});
 
             const updateData = {};
-            // Firestore arrayUnion pour ajout sans ecraser
             updateData[`${cat}.${type}`] = firebase.firestore.FieldValue.arrayUnion(...items);
 
             db.collection("stocks").doc(currentMachine).set(updateData, {merge: true})
@@ -460,29 +509,43 @@
                 scanner.pause();
                 setTimeout(() => scanner.resume(), 1500);
             } else if(scanMode === 'remove') {
+                closeScanner(); // Important : fermer avant de traiter pour éviter le freeze
                 document.getElementById('rem_code').value = code;
                 checkCodeRemove(code);
-                closeScanner();
             }
         }
 
         // RETRAIT
         function checkCodeRemove(code) {
             let found = null;
-            for(let c in stockData) {
-                for(let t in stockData[c]) {
-                    if(stockData[c][t].some(i => i.code === code)) found = {cat:c, type:t};
+            // Scan safe search
+            try {
+                for(let c in stockData) {
+                    if(!stockData[c]) continue;
+                    for(let t in stockData[c]) {
+                        if(Array.isArray(stockData[c][t]) && stockData[c][t].some(i => i.code === code)) {
+                            found = {cat:c, type:t};
+                            break;
+                        }
+                    }
+                    if(found) break;
                 }
+            } catch(e) { console.error("Erreur recherche", e); }
+
+            if(found) {
+                addToRemoveCart(found.cat, found.type, 1);
+                document.getElementById('rem_code').value = "";
+            } else {
+                alert("Produit inconnu dans ce stock.");
             }
-            if(found) addToRemoveCart(found.cat, found.type, 1);
-            else alert("Inconnu dans ce stock.");
         }
 
         function manualRemoveAdd() {
             const cat = document.getElementById('rem_cat').value;
             const type = document.getElementById('rem_type').value;
             const qty = parseInt(document.getElementById('rem_qty').value);
-            if(cat && type) addToRemoveCart(cat, type, qty);
+            if(!cat || !type) return;
+            addToRemoveCart(cat, type, qty);
         }
 
         function addToRemoveCart(cat, type, qty) {
@@ -500,21 +563,25 @@
             const d = document.getElementById('rem_cart');
             d.innerHTML = removeBuffer.length ? "" : "Vide";
             removeBuffer.forEach((i, idx) => {
-                d.innerHTML += `<div class="rafale-item"><span>${i.qty}x ${i.type}</span><button style="background:red;border:none;color:white" onclick="delRem(${idx})">X</button></div>`;
+                d.innerHTML += `
+                    <div class="rafale-item">
+                        <span>${i.qty}x ${i.type}</span>
+                        <button style="background:red;border:none;color:white;padding:5px 10px;border-radius:5px;" onclick="delRem(${idx})">X</button>
+                    </div>
+                `;
             });
         }
         function delRem(i) { removeBuffer.splice(i, 1); renderRemoveCart(); }
 
         function commitRemove() {
             if(!removeBuffer.length) return;
-            // Pour retirer, on doit lire et reecrire le tableau
             const docRef = db.collection("stocks").doc(currentMachine);
             db.runTransaction(async (t) => {
                 const doc = await t.get(docRef);
                 const data = doc.data();
                 removeBuffer.forEach(item => {
                     const list = data[item.cat][item.type];
-                    list.splice(-item.qty); // Enlever les derniers
+                    list.splice(-item.qty);
                     data[item.cat][item.type] = list;
                 });
                 t.update(docRef, data);
@@ -555,23 +622,7 @@
 
         function commitRafale() {
             if(!rafaleBuffer.length) return;
-            const batch = db.batch();
             const docRef = db.collection("stocks").doc(currentMachine);
-            
-            // On le fait en mode simple merge
-            // Note: batch ne marche pas bien pour merge deep fields avec arrayUnion sur meme doc plusieurs fois
-            // On va faire update simple
-            
-            const updates = {};
-            rafaleBuffer.forEach(item => {
-                const k = `${item.cat}.${item.type}`;
-                const val = {code: item.code, date: new Date().toISOString()};
-                // Astuce: on groupe
-            });
-            
-            // Pour faire simple et robuste: un par un ou groupé par type
-            // On va utiliser la méthode simple du commitAdd en boucle (c'est sale mais ça marche) ou transaction
-            // Mieux: on lit tout, on ajoute tout, on sauve tout.
             
             docRef.get().then(doc => {
                 let data = doc.exists ? doc.data() : {};
