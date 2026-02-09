@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - MASTER V2 (BLINDÉ)</title>
+    <title>C2MI STOCK - MASTER V3</title>
     
     <style>
         :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; --dark: #880e4f; }
@@ -58,7 +58,7 @@
         
         /* LISTES */
         .stock-cat { margin-bottom: 15px; background: #f9f9f9; border-radius: 8px; overflow: hidden; }
-        .stock-cat-title { background: #eee; padding: 10px; font-weight: 800; color: #555; font-size: 0.9rem; }
+        .stock-cat-title { background: #eee; padding: 10px; font-weight: 800; color: #555; font-size: 0.9rem; text-transform: uppercase;}
         .stock-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; align-items: center; }
         .stock-item:last-child { border-bottom: none; }
         .badge { background: var(--primary); color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; }
@@ -99,7 +99,7 @@
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition V2</p>
+            <p>Maître Guigui Edition V3</p>
         </div>
 
         <div id="view-machines" class="grid-machines"></div>
@@ -186,6 +186,7 @@
             "ACX": ["ACX 01", "ACX 02"]
         };
 
+        // On garde une config de base au cas où, mais le code s'adapte
         let CATEGORIES = {
             'filtration': { name: 'Filtration', types: ['Filtre Huile', 'Filtre Gasoil', 'Filtre Air'] },
             'freinage': { name: 'Freinage', types: ['Plaquettes', 'Disques'] }
@@ -234,6 +235,7 @@
             ids.forEach(id => {
                 const el = document.getElementById(id);
                 if(!el) return;
+                // On garde les options, mais on permet d'ajouter si besoin
                 el.innerHTML = '<option value="">-- Catégorie --</option>';
                 for(let k in CATEGORIES) {
                     el.innerHTML += `<option value="${k}">${CATEGORIES[k].name}</option>`;
@@ -283,40 +285,64 @@
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         }
 
-        // NOUVELLE CATEGORIE
+        // NOUVELLE CATEGORIE (SECURISÉE)
         function newCategory() {
             const nom = prompt("Nom de la catégorie ?");
             if(!nom) return;
-            const id = nom.toLowerCase().replace(/\s/g, '_');
-            if(CATEGORIES[id]) return alert("Existe déjà !");
+            // On nettoie le nom pour l'ID (pas d'espace, minuscule)
+            const id = nom.toLowerCase().trim().replace(/\s+/g, '_');
             
+            // On ajoute à la liste locale
             CATEGORIES[id] = { name: nom, types: [] };
+            
+            // On sauvegarde la config pour que ça reste
             db.collection("config").doc("categories_stock").set(CATEGORIES, {merge: true})
-                .then(() => { alert("✅ Créé !"); updateSelects(); });
+                .then(() => { 
+                    alert("✅ Catégorie créée !"); 
+                    updateSelects(); 
+                    // On sélectionne direct la nouvelle catégorie
+                    setTimeout(() => document.getElementById('add_cat').value = id, 100);
+                });
         }
 
-        // STOCK DISPLAY
+        // --- AFFICHAGE DU STOCK (CORRIGÉ POUR TOUT VOIR) ---
         function renderStock() {
             const list = document.getElementById('stock-list');
             list.innerHTML = "";
-            let empty = true;
+            
+            if (!stockData || Object.keys(stockData).length === 0) {
+                 list.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>Stock vide. Ajoute une pièce !</div>";
+                 return;
+            }
 
-            for(let catKey in CATEGORIES) {
-                const catStock = stockData[catKey] || {};
-                const types = Object.keys(catStock);
-                const activeTypes = types.filter(t => Array.isArray(catStock[t]) && catStock[t].length > 0);
+            let somethingDisplayed = false;
 
-                if(activeTypes.length > 0) {
-                    empty = false;
-                    let html = `<div class="stock-cat"><div class="stock-cat-title">${CATEGORIES[catKey].name}</div>`;
-                    activeTypes.forEach(t => {
-                        html += `<div class="stock-item"><span>${t}</span><span class="badge">${catStock[t].length}</span></div>`;
-                    });
-                    html += `</div>`;
-                    list.innerHTML += html;
+            // ON BOUCLE SUR LES DONNÉES RÉELLES DE LA BASE
+            for(let catKey in stockData) {
+                const catContent = stockData[catKey];
+                
+                // Si c'est un objet (donc une catégorie contenant des pièces)
+                if (typeof catContent === 'object' && catContent !== null) {
+                    
+                    const types = Object.keys(catContent);
+                    const activeTypes = types.filter(t => Array.isArray(catContent[t]) && catContent[t].length > 0);
+
+                    if(activeTypes.length > 0) {
+                        somethingDisplayed = true;
+                        // On essaie de choper le "Joli Nom" dans la config, sinon on met la clé en majuscule
+                        const prettyName = (CATEGORIES[catKey] && CATEGORIES[catKey].name) ? CATEGORIES[catKey].name : catKey.toUpperCase();
+                        
+                        let html = `<div class="stock-cat"><div class="stock-cat-title">${prettyName}</div>`;
+                        activeTypes.forEach(t => {
+                            html += `<div class="stock-item"><span>${t}</span><span class="badge">${catContent[t].length}</span></div>`;
+                        });
+                        html += `</div>`;
+                        list.innerHTML += html;
+                    }
                 }
             }
-            if(empty) list.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>Stock vide pour cet engin.</div>";
+            
+            if(!somethingDisplayed) list.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>Stock vide (rien trouvé).</div>";
         }
 
         // AJOUT
@@ -334,7 +360,8 @@
             const val = inp.value.toLowerCase();
             
             if(!cat) return;
-            const types = CATEGORIES[cat].types || [];
+            // On prend les types de la config OU vide si nouvelle cat
+            const types = CATEGORIES[cat]?.types || []; 
             const matches = types.filter(t => t.toLowerCase().includes(val));
 
             sugg.innerHTML = "";
@@ -348,12 +375,13 @@
                 sugg.appendChild(div);
             });
 
+            // Option de création rapide du type
             if(val && !matches.includes(inp.value)) {
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
-                div.innerHTML = `<strong>+ Créer "${inp.value}"</strong>`;
+                div.innerHTML = `<strong>+ Créer type "${inp.value}"</strong>`;
                 div.onclick = () => {
-                    if(!CATEGORIES[cat].types.includes(inp.value)) {
+                    if(CATEGORIES[cat] && !CATEGORIES[cat].types.includes(inp.value)) {
                         CATEGORIES[cat].types.push(inp.value);
                         db.collection("config").doc("categories_stock").set(CATEGORIES, {merge: true});
                     }
@@ -365,12 +393,19 @@
         }
 
         function checkCode(code) {
-            if (!stockData) return; // Sécurité si stockData pas encore chargé
+            if (!stockData) return;
             for(let c in stockData) {
+                if(typeof stockData[c] !== 'object') continue;
                 for(let t in stockData[c]) {
-                    if(stockData[c][t] && stockData[c][t].some(i => i.code === code)) {
+                    if(Array.isArray(stockData[c][t]) && stockData[c][t].some(i => i.code === code)) {
                         document.getElementById('add_alert').style.display = 'block';
-                        document.getElementById('add_cat').value = c;
+                        // On essaie de pré-remplir si on connait la cat
+                        if(document.querySelector(`#add_cat option[value="${c}"]`)) {
+                             document.getElementById('add_cat').value = c;
+                        } else {
+                            // Si la cat n'est pas dans le select (cas rare), on ne remplit pas
+                            console.log("Catégorie trouvée en base mais pas dans le menu:", c);
+                        }
                         updateTypes('add');
                         setTimeout(() => document.getElementById('add_type').value = t, 50);
                         return;
@@ -380,7 +415,7 @@
             document.getElementById('add_alert').style.display = 'none';
         }
 
-        // ------ CORRECTION MAJEURE ICI MAÎTRE ------
+        // --- ENREGISTREMENT BLINDÉ (STRUCTURE HIERARCHIQUE) ---
         function commitAdd() {
             const cat = document.getElementById('add_cat').value;
             const type = document.getElementById('add_type').value;
@@ -392,15 +427,14 @@
             const items = [];
             for(let i=0; i<qty; i++) items.push({code: code, date: new Date().toISOString()});
 
-            // On construit l'objet proprement pour que Firestore capte la hiérarchie
             const updateData = {};
-            updateData[cat] = {}; // On initialise l'objet parent
-            // arrayUnion permet d'ajouter sans écraser l'existant
+            // Initialisation de l'objet parent pour être sûr que Firestore comprenne la structure
+            updateData[cat] = {}; 
             updateData[cat][type] = firebase.firestore.FieldValue.arrayUnion(...items);
 
             db.collection("stocks").doc(currentMachine).set(updateData, {merge: true})
                 .then(() => {
-                    alert("✅ Ajouté avec succès Maître !");
+                    alert("✅ Ajouté ! (Vérifie l'inventaire)");
                     document.getElementById('add_code').value = "";
                     document.getElementById('add_alert').style.display = 'none';
                     document.getElementById('add_qty').value = 1;
@@ -444,7 +478,7 @@
             let found = null;
             try {
                 for(let c in stockData) {
-                    if(!stockData[c]) continue;
+                    if(typeof stockData[c] !== 'object') continue;
                     for(let t in stockData[c]) {
                         if(Array.isArray(stockData[c][t]) && stockData[c][t].some(i => i.code === code)) {
                             found = {cat:c, type:t};
@@ -453,7 +487,7 @@
                     }
                     if(found) break;
                 }
-            } catch(e) { console.error("Erreur recherche", e); }
+            } catch(e) { console.error(e); }
 
             if(found) {
                 addToRemoveCart(found.cat, found.type, 1);
@@ -503,11 +537,12 @@
                 const doc = await t.get(docRef);
                 const data = doc.data();
                 removeBuffer.forEach(item => {
-                    const list = data[item.cat][item.type];
-                    // Sécurité : on retire seulement si la liste existe
-                    if(list && list.length >= item.qty) {
-                        list.splice(-item.qty);
-                        data[item.cat][item.type] = list;
+                    if (data[item.cat] && data[item.cat][item.type]) {
+                        const list = data[item.cat][item.type];
+                        if(list.length >= item.qty) {
+                            list.splice(-item.qty);
+                            data[item.cat][item.type] = list;
+                        }
                     }
                 });
                 t.update(docRef, data);
@@ -523,8 +558,9 @@
             let found = null;
             if (stockData) {
                 for(let c in stockData) {
+                    if(typeof stockData[c] !== 'object') continue;
                     for(let t in stockData[c]) {
-                        if(stockData[c][t] && stockData[c][t].some(i => i.code === code)) found = {cat:c, type:t};
+                        if(Array.isArray(stockData[c][t]) && stockData[c][t].some(i => i.code === code)) found = {cat:c, type:t};
                     }
                 }
             }
@@ -555,10 +591,8 @@
             docRef.get().then(doc => {
                 let data = doc.exists ? doc.data() : {};
                 rafaleBuffer.forEach(item => {
-                    // Sécurité : on s'assure que la structure existe
                     if(!data[item.cat]) data[item.cat] = {};
                     if(!data[item.cat][item.type]) data[item.cat][item.type] = [];
-                    
                     data[item.cat][item.type].push({code: item.code, date: new Date().toISOString()});
                     
                     if(CATEGORIES[item.cat] && !CATEGORIES[item.cat].types.includes(item.type)) {
@@ -589,6 +623,7 @@
             
             const d = document.getElementById('prev-res');
             let h = "";
+            // Pour la prévision, on se base sur la config standard (filtration)
             (CATEGORIES['filtration']?.types || []).forEach(t => {
                 const s = stockData['filtration']?.[t]?.length || 0;
                 const m = Math.max(0, count - s);
