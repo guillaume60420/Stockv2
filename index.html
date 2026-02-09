@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C2MI - Gestion Stock Filtres</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #E30066;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            color: #E30066;
+            margin-bottom: 5px;
+            font-weight: 900;
+        }
+
+        .header p {
+            color: #333;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        /* Machine Selection */
+        .machine-selection {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .machine-selection.hidden {
+            display: none;
+        }
+
+        .machine-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .machine-card.selected {
+            border-color: #FFD700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .machine-icon {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+        }
+
+        .machine-name {
+            font-size: 1em;
+            font-weight: 900;
+            color: #E30066;
+        }
+
+        /* Machine Header */
+        .machine-header {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .machine-header.active {
+            display: block;
+        }
+
+        .machine-header h2 {
+            color: #E30066;
+            font-size: 1.5em;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        .machine-header button {
+            background: #6c757d;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 900;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Menu Buttons */
+        .menu-buttons {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .menu-buttons.active {
+            display: grid;
+        }
+
+        .menu-btn {
+            background: white;
+            border: none;
+            border-radius: 10px;
+            padding: 25px 15px;
+            font-size: 1.1em;
+            font-weight: 900;
+            color: #E30066;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #E30066;
+            margin-bottom: 20px;
+            font-weight: 900;
+        }
+
+        /* Stock Display */
+        .category-section {
+            margin-bottom: 25px;
+        }
+
+        .category-title {
+            font-size: 1.3em;
+            color: #E30066;
+            font-weight: 900;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stock-items {
+            display: grid;
+            gap: 15px;
+            padding-left: 10px;
+        }
+
+        .stock-item {
+            background: #f8f9fa;
+            border: 2px solid #E30066;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .stock-item:active {
+            background: #fff;
+            transform: scale(0.98);
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stock-name {
+            font-size: 1.1em;
+            font-weight: 900;
+            color: #E30066;
+        }
+
+        .stock-quantity {
+            font-size: 1.8em;
+            font-weight: 900;
+            color: #E30066;
+        }
+
+        /* Drawer Visualization */
+        .drawer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .drawer.open {
+            max-height: 800px;
+        }
+
+        .drawer-content {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .drawer-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+            gap: 8px;
+        }
+
+        .item-box {
+            aspect-ratio: 1;
+            background: #E30066;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: 900;
+            color: white;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #E30066;
+            margin-bottom: 8px;
+            font-weight: 900;
+            font-size: 1em;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #E30066;
+            border-radius: 8px;
+            color: #333;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 10px rgba(227, 0, 102, 0.2);
+        }
+
+        .btn {
+            background: #E30066;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 900;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-scan {
+            background: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 900;
+            font-size: 1em;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        /* Suggestions */
+        .suggestions {
+            position: relative;
+        }
+
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #E30066;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .suggestions-list.active {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+            font-weight: 600;
+        }
+
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+
+        /* Retrait liste */
+        .retrait-liste {
+            background: #f8f9fa;
+            border: 2px solid #E30066;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        .retrait-liste-title {
+            font-weight: 900;
+            color: #E30066;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .retrait-liste-items {
+            display: grid;
+            gap: 8px;
+        }
+
+        .retrait-liste-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .retrait-liste-item-info {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .retrait-liste-item-remove {
+            background: #dc3545;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 900;
+        }
+
+        .retrait-liste-empty {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .btn-add-categorie {
+            background: #17a2b8;
+            margin-bottom: 10px;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            font-weight: 600;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        /* Engins Liste */
+        .engins-liste {
+            margin: 20px 0;
+        }
+
+        .engin-item {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .engin-item.selected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .engin-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .engin-info {
+            flex: 1;
+        }
+
+        .engin-nom {
+            font-weight: 900;
+            color: #E30066;
+            margin-bottom: 5px;
+        }
+
+        .engin-date-input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #E30066;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .engin-date-input:disabled {
+            background: #e9ecef;
+            border-color: #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 C2MI - Gestion Stock Filtres</h1>
+            <p>Système de gestion intelligente des pièces de maintenance</p>
+        </div>
+
+        <!-- Machine Selection -->
+        <div class="machine-selection" id="machineSelection">
+            <div class="machine-card" onclick="selectMachine('4\\'AXE')">
+                <div class="machine-icon">🚂</div>
+                <div class="machine-name">4'AXE</div>
+            </div>
+            <div class="machine-card" onclick="selectMachine('SKYRAILLER')">
+                <div class="machine-icon">🚄</div>
+                <div class="machine-name">SKYRAILLER</div>
+            </div>
+            <div class="machine-card" onclick="selectMachine('ELAN')">
+                <div class="machine-icon">🚅</div>
+                <div class="machine-name">ELAN</div>
+            </div>
+            <div class="machine-card" onclick="selectMachine('22TRR')">
+                <div class="machine-icon">🚆</div>
+                <div class="machine-name">22 TRR</div>
+            </div>
+            <div class="machine-card" onclick="selectMachine('DEBROUSSAILLEUSE')">
+                <div class="machine-icon">🌿</div>
+                <div class="machine-name">DÉBROUSSAILLEUSE</div>
+            </div>
+        </div>
+
+        <!-- Machine Header -->
+        <div class="machine-header" id="machineHeader">
+            <h2 id="machineHeaderName"></h2>
+            <button onclick="backToMachines()">⬅️ Changer de machine</button>
+        </div>
+
+        <!-- Menu Buttons -->
+        <div class="menu-buttons" id="menuButtons">
+            <button class="menu-btn" onclick="showSection('stock')">
+                📦 STOCK
+            </button>
+            <button class="menu-btn" onclick="showSection('ajouter')">
+                ➕ AJOUTER
+            </button>
+            <button class="menu-btn" onclick="showSection('retirer')">
+                ➖ RETIRER
+            </button>
+            <button class="menu-btn" onclick="showSection('prevision')">
+                📊 PRÉVISION
+            </button>
+        </div>
+
+        <!-- Stock Section -->
+        <div class="content-section" id="stockSection">
+            <button class="back-btn" onclick="backToMenu()">⬅️ Retour</button>
+            <h2 class="section-title">📦 Stock - <span id="stockMachineName"></span></h2>
+            <div class="stock-items" id="stockItems"></div>
+        </div>
+
+        <!-- Ajouter Section -->
+        <div class="content-section" id="ajouterSection">
+            <button class="back-btn" onclick="backToMenu()">⬅️ Retour</button>
+            <h2 class="section-title">➕ Ajouter au Stock</h2>
+            
+            <button class="btn btn-scan" onclick="ouvrirScanner()">📷 Scanner Code-Barres</button>
+
+            <div class="form-group">
+                <label>Code-Barres (manuel)</label>
+                <input type="text" id="scanInput" placeholder="Ex: 123456789">
+            </div>
+
+            <div class="form-group">
+                <label>Catégorie</label>
+                <select id="categorieSelect" onchange="updateFiltreTypes()">
+                    <option value="">-- Sélectionner --</option>
+                </select>
+                <button class="btn btn-add-categorie" onclick="ajouterCategorie()">➕ Nouvelle Catégorie</button>
+            </div>
+
+            <div class="form-group suggestions">
+                <label>Type de Pièce</label>
+                <input type="text" id="filtreTypeInput" placeholder="Tapez le nom..." oninput="showSuggestions()" onfocus="showSuggestions()" disabled>
+                <div class="suggestions-list" id="suggestionsList"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Quantité</label>
+                <input type="number" id="quantiteAjout" min="1" value="1">
+            </div>
+
+            <button class="btn" onclick="ajouterStock()">Ajouter au Stock</button>
+        </div>
+
+        <!-- Retirer Section -->
+        <div class="content-section" id="retirerSection">
+            <button class="back-btn" onclick="backToMenu()">⬅️ Retour</button>
+            <h2 class="section-title">➖ Retirer du Stock</h2>
+
+            <h3 style="color: #E30066; margin: 15px 0; font-size: 1.2em;">Retrait par Kit</h3>
+            <button class="btn" onclick="retirerKitFiltration()">🔧 Kit Filtration Complet</button>
+
+            <h3 style="color: #E30066; margin: 20px 0 15px 0; font-size: 1.2em;">Liste de Retrait</h3>
+            
+            <div class="retrait-liste">
+                <div class="retrait-liste-title">📋 Pièces à retirer :</div>
+                <div class="retrait-liste-items" id="retraitListeItems">
+                    <div class="retrait-liste-empty">Aucune pièce dans la liste</div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="validerRetraitListe()" id="btnValiderRetrait" style="display: none;">✅ Valider le Retrait</button>
+
+            <h3 style="color: #E30066; margin: 20px 0 15px 0; font-size: 1.2em;">Ajouter à la liste</h3>
+            
+            <div class="form-group">
+                <label>Catégorie</label>
+                <select id="categorieRetraitSelect" onchange="updateRetraitTypes()">
+                    <option value="">-- Sélectionner --</option>
+                </select>
+            </div>
+
+            <div class="form-group suggestions">
+                <label>Type de Pièce</label>
+                <input type="text" id="filtreTypeRetraitInput" placeholder="Tapez le nom..." oninput="showRetraitSuggestions()" onfocus="showRetraitSuggestions()" disabled>
+                <div class="suggestions-list" id="retraitSuggestionsList"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Quantité</label>
+                <input type="number" id="quantiteRetrait" min="1" value="1">
+            </div>
+
+            <button class="btn btn-secondary" onclick="ajouterAListeRetrait()">➕ Ajouter à la Liste</button>
+        </div>
+
+        <!-- Prévision Section -->
+        <div class="content-section" id="previsionSection">
+            <button class="back-btn" onclick="backToMenu()">⬅️ Retour</button>
+            <h2 class="section-title">📊 Prévision Maintenance</h2>
+
+            <div class="alert alert-warning" style="font-size: 0.9em;">
+                ℹ️ Liste des engins récupérée automatiquement depuis C2MI
+            </div>
+
+            <h3 style="color: #E30066; margin: 20px 0 10px 0; font-size: 1.2em;">
+                Engins <span id="previsionMachineName"></span>
+            </h3>
+            
+            <div id="enginsListe" class="engins-liste"></div>
+
+            <button class="btn" onclick="calculerPrevisions()">🔍 Calculer les Prévisions</button>
+
+            <div id="alertesStock"></div>
+        </div>
+    </div>
+
+    <!-- Scanner (avec Quagga2) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+
+    <!-- Firebase -->
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDR1T9ss36NFuQWvq3ypwf7nUcqRhq5dQ8",
+            authDomain: "maintenance-c2mi.firebaseapp.com",
+            databaseURL: "https://maintenance-c2mi-default-rtdb.firebaseio.com",
+            projectId: "maintenance-c2mi",
+            storageBucket: "maintenance-c2mi.firebasestorage.app",
+            messagingSenderId: "224545367081",
+            appId: "1:224545367081:web:378d28b892528754c6a838"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Global variables
+        let currentMachine = '';
+        let stockData = {};
+        let categoriesData = {
+            filtration: {
+                name: 'Filtration',
+                types: []
+            }
+        };
+        let retraitListe = [];
+        let enginsC2MI = {};
+        let selectedEngins = [];
+
+        window.stockData = stockData;
+        window.database = database;
+
+        // Initial filtration types
+        const initialFiltrationTypes = ['Filtre à Huile', 'Filtre à Gasoil', 'Pré-Filtre à Gasoil', 'Filtre à Air'];
+
+        // Scanner avec prise de photo
+        let scannerActive = false;
+        
+        window.ouvrirScanner = function() {
+            if (scannerActive) {
+                fermerScanner();
+                return;
+            }
+            
+            // Créer l'interface du scanner
+            const scannerDiv = document.createElement('div');
+            scannerDiv.id = 'scanner-interface';
+            scannerDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.95);
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            scannerDiv.innerHTML = `
+                <div style="text-align: center; color: white; padding: 20px; max-width: 90%;">
+                    <h2 style="color: #FFD700; margin-bottom: 15px;">📷 Scanner Code-Barres</h2>
+                    <div id="scanner-container" style="position: relative; width: 100%; max-width: 500px; margin: 0 auto;">
+                        <video id="scanner-video" style="width: 100%; border: 3px solid #FFD700; border-radius: 10px;"></video>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 2px; background: #FFD700; box-shadow: 0 0 20px #FFD700;"></div>
+                    </div>
+                    <div id="scanner-result" style="margin: 20px 0; font-size: 1.2em; min-height: 30px; color: #FFD700;"></div>
+                    <button onclick="fermerScanner()" style="background: #E30066; border: none; padding: 15px 30px; border-radius: 10px; color: white; font-size: 1.1em; font-weight: 900; cursor: pointer; margin-top: 10px;">❌ Fermer</button>
+                </div>
+            `;
+            
+            document.body.appendChild(scannerDiv);
+            
+            // Initialiser Quagga
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#scanner-video'),
+                    constraints: {
+                        facingMode: "environment"
+                    }
+                },
+                decoder: {
+                    readers: [
+                        "code_128_reader",
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_39_reader",
+                        "code_39_vin_reader",
+                        "codabar_reader",
+                        "upc_reader",
+                        "upc_e_reader"
+                    ]
+                },
+                locate: true
+            }, function(err) {
+                if (err) {
+                    console.error('Erreur scanner:', err);
+                    document.getElementById('scanner-result').innerHTML = '⚠️ Erreur: ' + err.message;
+                    return;
+                }
+                Quagga.start();
+                scannerActive = true;
+                document.getElementById('scanner-result').innerHTML = '🔍 Scannez le code-barres...';
+            });
+            
+            // Écouter les détections
+            Quagga.onDetected(function(result) {
+                const code = result.codeResult.code;
+                document.getElementById('scanner-result').innerHTML = `✅ Code détecté: <strong>${code}</strong>`;
+                
+                // Remplir automatiquement le code-barres
+                document.getElementById('codeBarreInput').value = code;
+                
+                // Bip sonore
+                const audio = new AudioContext();
+                const oscillator = audio.createOscillator();
+                const gain = audio.createGain();
+                oscillator.connect(gain);
+                gain.connect(audio.destination);
+                oscillator.frequency.value = 800;
+                gain.gain.value = 0.1;
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), 100);
+                
+                // Fermer après 1 seconde
+                setTimeout(fermerScanner, 1000);
+            });
+        };
+        
+        window.fermerScanner = function() {
+            if (scannerActive) {
+                Quagga.stop();
+                scannerActive = false;
+            }
+            const scannerDiv = document.getElementById('scanner-interface');
+            if (scannerDiv) {
+                scannerDiv.remove();
+            }
+        };
+
+        // Initialize categories
+        function initCategories() {
+            const categoriesRef = ref(database, 'categories_stock');
+            get(categoriesRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    categoriesData = snapshot.val();
+                } else {
+                    categoriesData.filtration.types = initialFiltrationTypes;
+                    set(categoriesRef, categoriesData);
+                }
+                updateCategorieSelects();
+            });
+        }
+
+        // Update category selects
+        function updateCategorieSelects() {
+            const selects = ['categorieSelect', 'categorieRetraitSelect'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">-- Sélectionner --</option>';
+                for (let [key, data] of Object.entries(categoriesData)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = data.name;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // Ajouter catégorie
+        window.ajouterCategorie = function() {
+            const nom = prompt('Nom de la nouvelle catégorie :');
+            if (!nom) return;
+            
+            const key = nom.toLowerCase().replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            if (categoriesData[key]) {
+                alert('⚠️ Cette catégorie existe déjà !');
+                return;
+            }
+            
+            categoriesData[key] = {
+                name: nom,
+                types: []
+            };
+            
+            const categoriesRef = ref(database, 'categories_stock');
+            set(categoriesRef, categoriesData);
+            
+            updateCategorieSelects();
+            document.getElementById('categorieSelect').value = key;
+            updateFiltreTypes();
+            
+            alert('✅ Catégorie créée !');
+        };
+
+        // Update filter types
+        window.updateFiltreTypes = function() {
+            const categorie = document.getElementById('categorieSelect').value;
+            const input = document.getElementById('filtreTypeInput');
+            
+            if (categorie) {
+                input.disabled = false;
+                input.value = '';
+            } else {
+                input.disabled = true;
+                input.value = '';
+            }
+            
+            document.getElementById('suggestionsList').classList.remove('active');
+        };
+
+        // Show suggestions
+        window.showSuggestions = function() {
+            const categorie = document.getElementById('categorieSelect').value;
+            if (!categorie) return;
+            
+            const input = document.getElementById('filtreTypeInput');
+            const value = input.value.toLowerCase();
+            const list = document.getElementById('suggestionsList');
+            
+            const types = categoriesData[categorie].types || [];
+            const filtered = types.filter(t => t.toLowerCase().includes(value));
+            
+            list.innerHTML = '';
+            
+            if (filtered.length > 0) {
+                filtered.forEach(type => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.textContent = type;
+                    item.onclick = () => {
+                        input.value = type;
+                        list.classList.remove('active');
+                    };
+                    list.appendChild(item);
+                });
+                list.classList.add('active');
+            } else if (value.length > 0) {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML = `<strong>➕ Créer "${input.value}"</strong>`;
+                item.onclick = () => {
+                    list.classList.remove('active');
+                };
+                list.appendChild(item);
+                list.classList.add('active');
+            } else {
+                list.classList.remove('active');
+            }
+        };
+
+        // Hide suggestions
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.suggestions')) {
+                document.querySelectorAll('.suggestions-list').forEach(list => {
+                    list.classList.remove('active');
+                });
+            }
+        });
+
+        // Machine selection
+        window.selectMachine = function(machine) {
+            currentMachine = machine;
+            
+            // Hide machines
+            document.getElementById('machineSelection').classList.add('hidden');
+            
+            // Show header
+            document.getElementById('machineHeader').classList.add('active');
+            document.getElementById('machineHeaderName').textContent = machine;
+            
+            // Show menu
+            document.getElementById('menuButtons').classList.add('active');
+            
+            // Load data
+            loadStockData();
+            loadEnginsC2MI();
+        };
+
+        // Back to machines
+        window.backToMachines = function() {
+            document.getElementById('menuButtons').classList.remove('active');
+            document.getElementById('machineHeader').classList.remove('active');
+            
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            
+            document.getElementById('machineSelection').classList.remove('hidden');
+            
+            currentMachine = '';
+        };
+
+        // Show section
+        window.showSection = function(section) {
+            document.getElementById('menuButtons').classList.remove('active');
+            document.getElementById('machineHeader').classList.remove('active');
+            
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            
+            document.getElementById(section + 'Section').classList.add('active');
+            
+            if (section === 'stock') {
+                displayStock();
+            } else if (section === 'retirer') {
+                updateRetraitCategories();
+                displayRetraitListe();
+            } else if (section === 'prevision') {
+                displayEnginsForPrevision();
+            }
+        };
+
+        // Back to menu
+        window.backToMenu = function() {
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            
+            document.getElementById('menuButtons').classList.add('active');
+            document.getElementById('machineHeader').classList.add('active');
+        };
+
+        // Load stock data
+        function loadStockData() {
+            const stockRef = ref(database, 'stock_filtres_v2/' + currentMachine);
+            onValue(stockRef, (snapshot) => {
+                stockData[currentMachine] = snapshot.val() || {};
+                displayStock();
+            });
+        }
+
+        // Display stock
+        function displayStock() {
+            const container = document.getElementById('stockItems');
+            document.getElementById('stockMachineName').textContent = currentMachine;
+            
+            const stock = stockData[currentMachine] || {};
+            container.innerHTML = '';
+            
+            for (let [categoryKey, categoryData] of Object.entries(categoriesData)) {
+                const categorySection = document.createElement('div');
+                categorySection.className = 'category-section';
+                
+                const categoryTitle = document.createElement('div');
+                categoryTitle.className = 'category-title';
+                categoryTitle.textContent = '📁 ' + categoryData.name;
+                categorySection.appendChild(categoryTitle);
+                
+                const stockItemsDiv = document.createElement('div');
+                stockItemsDiv.className = 'stock-items';
+                
+                const categoryStock = stock[categoryKey] || {};
+                const types = categoryData.types || [];
+                const allTypes = new Set([...types, ...Object.keys(categoryStock)]);
+                
+                allTypes.forEach(typeName => {
+                    const items = categoryStock[typeName] || [];
+                    const quantity = items.length;
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'stock-item';
+                    itemDiv.onclick = () => toggleDrawer(categoryKey, typeName);
+                    
+                    itemDiv.innerHTML = `
+                        <div class="stock-header">
+                            <div class="stock-name">${typeName}</div>
+                            <div class="stock-quantity">${quantity}</div>
+                        </div>
+                        <div class="drawer" id="drawer-${categoryKey}-${typeName.replace(/\s+/g, '_')}">
+                            <div class="drawer-content">
+                                <div class="drawer-label">Stock disponible :</div>
+                                <div class="items-grid" id="grid-${categoryKey}-${typeName.replace(/\s+/g, '_')}"></div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    stockItemsDiv.appendChild(itemDiv);
+                });
+                
+                if (allTypes.size > 0) {
+                    categorySection.appendChild(stockItemsDiv);
+                    container.appendChild(categorySection);
+                }
+            }
+        }
+
+        // Toggle drawer
+        window.toggleDrawer = function(category, type) {
+            const safeType = type.replace(/\s+/g, '_');
+            const drawer = document.getElementById(`drawer-${category}-${safeType}`);
+            const grid = document.getElementById(`grid-${category}-${safeType}`);
+            const items = stockData[currentMachine]?.[category]?.[type] || [];
+            
+            if (drawer.classList.contains('open')) {
+                drawer.classList.remove('open');
+            } else {
+                document.querySelectorAll('.drawer').forEach(d => d.classList.remove('open'));
+                drawer.classList.add('open');
+                
+                grid.innerHTML = '';
+                items.forEach((item, i) => {
+                    const box = document.createElement('div');
+                    box.className = 'item-box';
+                    box.textContent = i + 1;
+                    box.title = item.code || 'Pièce';
+                    box.style.animationDelay = (i * 0.02) + 's';
+                    grid.appendChild(box);
+                });
+            }
+        };
+
+        // Ajouter stock
+        window.ajouterStock = function() {
+            const code = document.getElementById('scanInput').value;
+            const categorie = document.getElementById('categorieSelect').value;
+            const typeNom = document.getElementById('filtreTypeInput').value.trim();
+            const quantite = parseInt(document.getElementById('quantiteAjout').value);
+            
+            if (!categorie || !typeNom || !quantite) {
+                alert('⚠️ Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+            
+            if (!stockData[currentMachine]) {
+                stockData[currentMachine] = {};
+            }
+            
+            if (!stockData[currentMachine][categorie]) {
+                stockData[currentMachine][categorie] = {};
+            }
+            
+            if (!stockData[currentMachine][categorie][typeNom]) {
+                stockData[currentMachine][categorie][typeNom] = [];
+            }
+            
+            if (!categoriesData[categorie].types.includes(typeNom)) {
+                categoriesData[categorie].types.push(typeNom);
+                const categoriesRef = ref(database, 'categories_stock');
+                set(categoriesRef, categoriesData);
+            }
+            
+            for (let i = 0; i < quantite; i++) {
+                stockData[currentMachine][categorie][typeNom].push({
+                    code: code || '',
+                    dateAjout: new Date().toISOString()
+                });
+            }
+            
+            const stockRef = ref(database, 'stock_filtres_v2/' + currentMachine);
+            set(stockRef, stockData[currentMachine]);
+            
+            document.getElementById('scanInput').value = '';
+            document.getElementById('categorieSelect').value = '';
+            document.getElementById('filtreTypeInput').value = '';
+            document.getElementById('filtreTypeInput').disabled = true;
+            document.getElementById('quantiteAjout').value = '1';
+            document.getElementById('suggestionsList').classList.remove('active');
+            
+            alert(`✅ ${quantite} pièce(s) ajoutée(s) au stock !`);
+        };
+
+        // Update retrait categories
+        function updateRetraitCategories() {
+            updateCategorieSelects();
+        }
+
+        // Update retrait types
+        window.updateRetraitTypes = function() {
+            const categorie = document.getElementById('categorieRetraitSelect').value;
+            const input = document.getElementById('filtreTypeRetraitInput');
+            
+            if (categorie) {
+                input.disabled = false;
+                input.value = '';
+            } else {
+                input.disabled = true;
+                input.value = '';
+            }
+            
+            document.getElementById('retraitSuggestionsList').classList.remove('active');
+        };
+
+        // Show retrait suggestions
+        window.showRetraitSuggestions = function() {
+            const categorie = document.getElementById('categorieRetraitSelect').value;
+            if (!categorie) return;
+            
+            const input = document.getElementById('filtreTypeRetraitInput');
+            const value = input.value.toLowerCase();
+            const list = document.getElementById('retraitSuggestionsList');
+            
+            const types = [];
+            if (stockData[currentMachine] && stockData[currentMachine][categorie]) {
+                types.push(...Object.keys(stockData[currentMachine][categorie]));
+            }
+            
+            const filtered = types.filter(t => t.toLowerCase().includes(value));
+            
+            list.innerHTML = '';
+            
+            if (filtered.length > 0) {
+                filtered.forEach(type => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    const qty = (stockData[currentMachine][categorie][type] || []).length;
+                    item.textContent = `${type} (${qty} dispo)`;
+                    item.onclick = () => {
+                        input.value = type;
+                        list.classList.remove('active');
+                    };
+                    list.appendChild(item);
+                });
+                list.classList.add('active');
+            } else {
+                list.classList.remove('active');
+            }
+        };
+
+        // Ajouter à liste retrait
+        window.ajouterAListeRetrait = function() {
+            const categorie = document.getElementById('categorieRetraitSelect').value;
+            const typeNom = document.getElementById('filtreTypeRetraitInput').value.trim();
+            const quantite = parseInt(document.getElementById('quantiteRetrait').value);
+            
+            if (!categorie || !typeNom || !quantite) {
+                alert('⚠️ Veuillez remplir tous les champs');
+                return;
+            }
+            
+            const available = (stockData[currentMachine]?.[categorie]?.[typeNom] || []).length;
+            
+            if (available < quantite) {
+                alert(`⚠️ Stock insuffisant ! (${available} disponible(s))`);
+                return;
+            }
+            
+            retraitListe.push({
+                categorie,
+                type: typeNom,
+                quantite
+            });
+            
+            document.getElementById('categorieRetraitSelect').value = '';
+            document.getElementById('filtreTypeRetraitInput').value = '';
+            document.getElementById('filtreTypeRetraitInput').disabled = true;
+            document.getElementById('quantiteRetrait').value = '1';
+            document.getElementById('retraitSuggestionsList').classList.remove('active');
+            
+            displayRetraitListe();
+        };
+
+        // Display retrait liste
+        function displayRetraitListe() {
+            const container = document.getElementById('retraitListeItems');
+            const btnValider = document.getElementById('btnValiderRetrait');
+            
+            if (retraitListe.length === 0) {
+                container.innerHTML = '<div class="retrait-liste-empty">Aucune pièce dans la liste</div>';
+                btnValider.style.display = 'none';
+            } else {
+                container.innerHTML = '';
+                retraitListe.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'retrait-liste-item';
+                    itemDiv.innerHTML = `
+                        <div class="retrait-liste-item-info">
+                            ${item.quantite}x ${item.type} (${categoriesData[item.categorie].name})
+                        </div>
+                        <button class="retrait-liste-item-remove" onclick="retirerDeListe(${index})">🗑️</button>
+                    `;
+                    container.appendChild(itemDiv);
+                });
+                btnValider.style.display = 'block';
+            }
+        }
+
+        // Retirer de liste
+        window.retirerDeListe = function(index) {
+            retraitListe.splice(index, 1);
+            displayRetraitListe();
+        };
+
+        // Valider retrait liste
+        window.validerRetraitListe = function() {
+            if (retraitListe.length === 0) return;
+            
+            for (let item of retraitListe) {
+                const available = (stockData[currentMachine]?.[item.categorie]?.[item.type] || []).length;
+                if (available < item.quantite) {
+                    alert(`⚠️ Stock insuffisant pour ${item.type} (${available} disponible(s), ${item.quantite} demandé(s))`);
+                    return;
+                }
+            }
+            
+            for (let item of retraitListe) {
+                for (let i = 0; i < item.quantite; i++) {
+                    stockData[currentMachine][item.categorie][item.type].pop();
+                }
+            }
+            
+            const stockRef = ref(database, 'stock_filtres_v2/' + currentMachine);
+            set(stockRef, stockData[currentMachine]);
+            
+            const total = retraitListe.reduce((sum, item) => sum + item.quantite, 0);
+            retraitListe = [];
+            displayRetraitListe();
+            
+            alert(`✅ ${total} pièce(s) retirée(s) du stock !`);
+        };
+
+        // Retirer kit filtration
+        window.retirerKitFiltration = function() {
+            const typesToRemove = ['Filtre à Huile', 'Filtre à Gasoil', 'Pré-Filtre à Gasoil', 'Filtre à Air'];
+            const categorie = 'filtration';
+            
+            if (!stockData[currentMachine] || !stockData[currentMachine][categorie]) {
+                alert('⚠️ Aucun stock de filtration disponible !');
+                return;
+            }
+            
+            for (let type of typesToRemove) {
+                const available = (stockData[currentMachine][categorie][type] || []).length;
+                if (available < 1) {
+                    alert(`⚠️ Stock insuffisant pour ${type} !`);
+                    return;
+                }
+            }
+            
+            for (let type of typesToRemove) {
+                stockData[currentMachine][categorie][type].pop();
+            }
+            
+            const stockRef = ref(database, 'stock_filtres_v2/' + currentMachine);
+            set(stockRef, stockData[currentMachine]);
+            
+            alert('✅ Kit Filtration retiré (1 de chaque filtre) !');
+        };
+
+        // Load engins from C2MI
+        function loadEnginsC2MI() {
+            // Charger les engins depuis C2MI
+            const enginsRef = ref(database, 'engins');
+            get(enginsRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const allEngins = snapshot.val();
+                    enginsC2MI[currentMachine] = [];
+                    
+                    // Filtrer par type de machine
+                    for (let [key, engin] of Object.entries(allEngins)) {
+                        // Normaliser les noms pour comparaison
+                        const machineType = (engin.type || '').toUpperCase().replace(/['\s]/g, '');
+                        const currentType = currentMachine.replace(/['\s]/g, '');
+                        
+                        if (machineType === currentType) {
+                            enginsC2MI[currentMachine].push({
+                                id: key,
+                                nom: engin.nomEngin || key,
+                                type: engin.type
+                            });
+                        }
+                    }
+                    
+                    console.log(`✅ ${enginsC2MI[currentMachine].length} engins ${currentMachine} trouvés`);
+                } else {
+                    enginsC2MI[currentMachine] = [];
+                    console.log('⚠️ Aucun engin trouvé dans C2MI');
+                }
+            }).catch(error => {
+                console.error('Erreur chargement engins:', error);
+                enginsC2MI[currentMachine] = [];
+            });
+        }
+
+        // Display engins for prevision
+        function displayEnginsForPrevision() {
+            const container = document.getElementById('enginsListe');
+            document.getElementById('previsionMachineName').textContent = currentMachine;
+            
+            const engins = enginsC2MI[currentMachine] || [];
+            
+            container.innerHTML = '';
+            
+            if (engins.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        ⚠️ Aucun engin de type ${currentMachine} trouvé dans C2MI.<br>
+                        <small>Ajoutez des engins dans C2MI pour utiliser les prévisions automatiques.</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            engins.forEach((engin, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'engin-item';
+                itemDiv.id = `engin-${index}`;
+                
+                itemDiv.innerHTML = `
+                    <input type="checkbox" class="engin-checkbox" id="check-${index}" onchange="toggleEngin(${index})">
+                    <div class="engin-info">
+                        <div class="engin-nom">${engin.nom}</div>
+                        <input type="date" class="engin-date-input" id="date-${index}" disabled>
+                    </div>
+                `;
+                
+                container.appendChild(itemDiv);
+            });
+        }
+
+        // Toggle engin selection
+        window.toggleEngin = function(index) {
+            const checkbox = document.getElementById(`check-${index}`);
+            const dateInput = document.getElementById(`date-${index}`);
+            const itemDiv = document.getElementById(`engin-${index}`);
+            
+            if (checkbox.checked) {
+                dateInput.disabled = false;
+                itemDiv.classList.add('selected');
+                // Mettre la date d'aujourd'hui par défaut
+                dateInput.valueAsDate = new Date();
+            } else {
+                dateInput.disabled = true;
+                dateInput.value = '';
+                itemDiv.classList.remove('selected');
+            }
+        };
+
+        // Calculer prévisions
+        window.calculerPrevisions = function() {
+            const alertContainer = document.getElementById('alertesStock');
+            const engins = enginsC2MI[currentMachine] || [];
+            const stock = stockData[currentMachine] || {};
+            
+            // Récupérer les engins sélectionnés avec dates
+            selectedEngins = [];
+            engins.forEach((engin, index) => {
+                const checkbox = document.getElementById(`check-${index}`);
+                const dateInput = document.getElementById(`date-${index}`);
+                
+                if (checkbox.checked && dateInput.value) {
+                    selectedEngins.push({
+                        nom: engin.nom,
+                        date: dateInput.value
+                    });
+                }
+            });
+            
+            if (selectedEngins.length === 0) {
+                alertContainer.innerHTML = '<div class="alert alert-warning">⚠️ Aucune intervention sélectionnée</div>';
+                return;
+            }
+            
+            // Trier par date
+            selectedEngins.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let alerts = '<h3 style="color: #E30066; margin: 20px 0;">🚨 Alertes de Stock</h3>';
+            
+            const filtrationTypes = ['Filtre à Huile', 'Filtre à Gasoil', 'Pré-Filtre à Gasoil', 'Filtre à Air'];
+            
+            filtrationTypes.forEach(typeName => {
+                const items = stock.filtration?.[typeName] || [];
+                const quantity = items.length;
+                const nbInterventions = selectedEngins.length;
+                
+                if (quantity < nbInterventions) {
+                    const rupture = quantity + 1;
+                    const enginRupture = selectedEngins[quantity];
+                    const date = enginRupture ? new Date(enginRupture.date).toLocaleDateString('fr-FR') : 'N/A';
+                    const nomEngin = enginRupture ? enginRupture.nom : 'N/A';
+                    
+                    alerts += `
+                        <div class="alert alert-danger">
+                            <strong>⚠️ ${typeName}</strong><br>
+                            Stock: ${quantity} | Interventions: ${nbInterventions}<br>
+                            <strong>Rupture prévue à la ${rupture}ème intervention</strong><br>
+                            📅 Date: ${date}<br>
+                            🚂 Engin: ${nomEngin}<br>
+                            <strong>❌ Manque: ${nbInterventions - quantity} filtre(s)</strong>
+                        </div>
+                    `;
+                } else {
+                    alerts += `
+                        <div class="alert alert-success">
+                            ✅ <strong>${typeName}</strong>: OK (${quantity}/${nbInterventions})
+                        </div>
+                    `;
+                }
+            });
+            
+            alertContainer.innerHTML = alerts;
+        };
+
+        // Initialize
+        initCategories();
+    </script>
+</body>
+</html>
