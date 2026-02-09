@@ -3,258 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI - Gestion Stock Pro</title>
+    <title>C2MI STOCK - MASTER</title>
     
-    <!-- Librairie Scanner Robuste -->
+    <!-- Librairie Scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #E30066; color: white; min-height: 100vh; padding-bottom: 80px; }
-        .container { max-width: 100%; margin: 0 auto; padding: 15px; }
-
-        /* Header */
-        .header { text-align: center; padding: 20px; background: white; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .header h1 { color: #E30066; font-weight: 900; font-size: 1.8em; }
-        .header p { color: #333; font-weight: 600; }
-
-        /* Machines Grid */
-        .machine-selection { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .machine-selection.hidden { display: none; }
-        .machine-card { background: white; border-radius: 12px; padding: 20px; text-align: center; color: #333; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s; }
-        .machine-card:active { transform: scale(0.95); }
-        .machine-icon { font-size: 2.5em; margin-bottom: 10px; }
-        .machine-name { font-weight: 900; color: #E30066; text-transform: uppercase; }
-
-        /* Machine Header */
-        .machine-header { display: none; background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .machine-header.active { display: block; }
-        .machine-header h2 { color: #E30066; margin: 0; font-weight: 900; }
-        .btn-change { background: #6c757d; border: none; padding: 8px 15px; border-radius: 20px; color: white; font-weight: bold; margin-top: 10px; font-size: 0.8em; }
-
-        /* Menu Principal */
-        .menu-buttons { display: none; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .menu-buttons.active { display: grid; }
-        .menu-btn { background: white; border: none; padding: 25px 10px; border-radius: 12px; color: #E30066; font-weight: 900; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .menu-btn:active { transform: scale(0.95); background: #f8f9fa; }
-        .btn-magasinier { grid-column: span 2; background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-
-        /* Sections Contenu */
-        .content-section { display: none; background: white; color: #333; padding: 20px; border-radius: 15px; margin-bottom: 20px; animation: slideUp 0.3s ease-out; }
-        .content-section.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .section-title { color: #E30066; font-weight: 900; font-size: 1.5em; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .back-btn { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
-
-        /* Stock Visuals */
-        .category-block { margin-bottom: 20px; }
-        .cat-title { background: #f1f3f5; padding: 10px; border-radius: 8px; color: #E30066; font-weight: bold; margin-bottom: 10px; }
-        .stock-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
-        .stock-qty { background: #E30066; color: white; padding: 5px 10px; border-radius: 20px; font-weight: bold; }
-
-        /* Forms */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; color: #E30066; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #E30066; border-radius: 8px; font-size: 1em; background: #fff; }
-        input:disabled { background: #e9ecef; border-color: #ced4da; }
-
-        /* Buttons */
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: 900; font-size: 1.1em; color: white; cursor: pointer; margin-bottom: 10px; transition: transform 0.1s; }
-        .btn:active { transform: scale(0.98); }
-        .btn-primary { background: #E30066; }
-        .btn-scan { background: #28a745; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-add { background: #17a2b8; }
-        .btn-danger { background: #dc3545; }
-
-        /* Mode Magasinier List */
-        .rafale-list { background: #f8f9fa; border-radius: 10px; padding: 10px; margin: 15px 0; max-height: 300px; overflow-y: auto; }
-        .rafale-item { background: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #28a745; }
-        .rafale-info { font-size: 0.9em; font-weight: bold; }
-        .rafale-cat { font-size: 0.75em; color: #666; }
-
-        /* Scanner Modal */
-        #scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        #reader { width: 100%; max-width: 500px; background: black; border-radius: 15px; overflow: hidden; border: 4px solid #E30066; }
+        /* STYLE PROPRE ET ROBUSTE */
+        :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--primary); color: white; padding-bottom: 100px; }
         
-        /* Auto-complete List */
-        .suggestions { position: relative; }
-        .suggestions-list { position: absolute; width: 100%; background: white; border: 2px solid #E30066; border-top: none; z-index: 100; max-height: 200px; overflow-y: auto; display: none; border-radius: 0 0 8px 8px; }
-        .suggestions-list.active { display: block; }
-        .suggestion-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: 600; }
-        .suggestion-item:hover { background: #fce4ec; }
+        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
 
-        /* Alerts */
-        .alert { padding: 15px; border-radius: 8px; margin-bottom: 10px; font-weight: 600; font-size: 0.9em; }
-        .alert-danger { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-        .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        /* HEADER */
+        .header { background: white; color: var(--primary); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .header h1 { font-weight: 900; font-size: 1.8rem; text-transform: uppercase; }
+        .header p { font-weight: 600; color: #666; font-size: 0.9rem; }
+
+        /* BOUTONS MACHINES */
+        .grid-machines { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card-machine { background: white; color: #333; padding: 20px; border-radius: 12px; text-align: center; cursor: pointer; transition: transform 0.1s; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .card-machine:active { transform: scale(0.96); }
+        .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+        .name { font-weight: 800; color: var(--primary); text-transform: uppercase; font-size: 0.9rem; }
+
+        /* NAVIGATION */
+        .nav-bar { display: none; background: white; padding: 10px; border-radius: 12px; margin-bottom: 20px; justify-content: space-between; align-items: center; color: var(--primary); }
+        .nav-bar.active { display: flex; }
+        .nav-title { font-weight: 900; font-size: 1.2rem; }
+        .btn-mini { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+
+        /* MENU ACTIONS */
+        .menu-actions { display: none; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .menu-actions.active { display: grid; }
+        .btn-menu { background: white; color: var(--primary); border: none; padding: 25px 10px; border-radius: 12px; font-weight: 800; font-size: 1rem; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-menu:active { transform: scale(0.98); background: #eee; }
+        .btn-rafale { grid-column: span 2; background: linear-gradient(135deg, #FFD700, #FFA500); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+
+        /* SECTIONS */
+        .section { display: none; background: white; color: #333; padding: 20px; border-radius: 15px; animation: slideUp 0.3s; }
+        .section.active { display: block; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .section h2 { color: var(--primary); font-weight: 900; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+
+        /* FORM ELEMENTS */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; background: #fff; }
+        input:focus { border-color: var(--primary); outline: none; }
+        
+        .btn-action { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: 900; font-size: 1.1rem; color: white; background: var(--primary); margin-top: 10px; }
+        .btn-scan { background: #28a745; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        /* LISTES & STOCK */
+        .stock-cat { margin-bottom: 15px; }
+        .stock-cat-title { background: #eee; padding: 8px 12px; border-radius: 6px; font-weight: 800; color: #555; margin-bottom: 5px; }
+        .stock-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0; align-items: center; }
+        .badge { background: var(--primary); color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; }
+
+        /* MODE RAFALE LISTE */
+        .rafale-list { max-height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 15px 0; border: 1px solid #ddd; }
+        .rafale-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 4px solid #28a745; }
+
+        /* SCANNER MODAL */
+        #scanner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        #reader { width: 100%; max-width: 400px; background: black; border-radius: 12px; overflow: hidden; border: 3px solid white; }
+
+        /* ALERTS */
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; text-align: center; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        /* AUTOCOMPLETE */
+        .suggestions { position: relative; }
+        .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; z-index: 100; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; color: #333; }
+        .suggestion-item:hover { background: #f0f0f0; }
+
+        /* PREVISION LIST */
+        .prev-item { display: flex; align-items: center; padding: 10px; background: #f8f9fa; margin-bottom: 5px; border-radius: 6px; }
+        .prev-item input { width: 20px; height: 20px; margin-right: 10px; }
     </style>
 </head>
 <body>
 
     <!-- MODAL SCANNER -->
     <div id="scanner-modal">
-        <h2 style="color:white; margin-bottom:20px;">📷 VISE LE CODE</h2>
+        <h2 style="color:white; margin-bottom:20px;">VISE LE CODE 📷</h2>
         <div id="reader"></div>
-        <button onclick="stopScanner()" class="btn btn-danger" style="max-width: 200px; margin-top: 20px;">FERMER</button>
+        <button onclick="window.closeScanner()" class="btn-action" style="background:#dc3545; margin-top:20px; max-width:200px;">FERMER</button>
     </div>
 
     <div class="container">
         
-        <!-- HEADER -->
         <div class="header">
-            <h1>🔧 C2MI STOCK</h1>
-            <p>Gestion Pro & Rapide</p>
+            <h1>C2MI STOCK</h1>
+            <p>Maître Guigui Edition</p>
         </div>
 
-        <!-- SELECTION MACHINE (HOME) -->
-        <div id="machineSelection" class="machine-selection"></div>
+        <!-- 1. CHOIX MACHINE -->
+        <div id="view-machines" class="grid-machines"></div>
 
-        <!-- HEADER MACHINE ACTIVE -->
-        <div id="machineHeader" class="machine-header">
-            <h2 id="machineTitle">--</h2>
-            <button class="btn-change" onclick="goHome()">⬅️ Changer d'engin</button>
+        <!-- BARRE NAVIGATION MACHINE -->
+        <div id="machine-nav" class="nav-bar">
+            <span class="nav-title" id="machine-title">--</span>
+            <button class="btn-mini" onclick="window.goHome()">Changer</button>
         </div>
 
-        <!-- MENU PRINCIPAL -->
-        <div id="menuButtons" class="menu-buttons">
-            <button class="menu-btn" onclick="openSection('stock')">
-                <span style="font-size:1.5em">📦</span> VOIR STOCK
-            </button>
-            <button class="menu-btn" onclick="openSection('ajouter')">
-                <span style="font-size:1.5em">➕</span> AJOUTER
-            </button>
-            <button class="menu-btn" onclick="openSection('retirer')">
-                <span style="font-size:1.5em">➖</span> RETIRER
-            </button>
-            <button class="menu-btn" onclick="openSection('prevision')">
-                <span style="font-size:1.5em">📊</span> PRÉVISION
-            </button>
-            <button class="menu-btn btn-magasinier" onclick="openSection('magasinier')">
-                <span style="font-size:1.5em">🔫</span> MODE MAGASINIER (RAFALE)
-            </button>
+        <!-- 2. MENU ACTIONS -->
+        <div id="view-menu" class="menu-actions">
+            <button class="btn-menu" onclick="window.nav('stock')">📦 STOCK</button>
+            <button class="btn-menu" onclick="window.nav('add')">➕ AJOUTER</button>
+            <button class="menu-btn btn-menu" onclick="window.nav('remove')">➖ RETIRER</button>
+            <button class="btn-menu" onclick="window.nav('prev')">📊 PRÉVISION</button>
+            <button class="btn-menu btn-rafale" onclick="window.nav('rafale')">🔫 MAGASINIER</button>
         </div>
 
-        <!-- SECTION 1: VOIR STOCK -->
-        <div id="stockSection" class="content-section">
-            <button class="back-btn" onclick="goBackToMenu()">⬅️ Menu</button>
-            <h2 class="section-title">📦 Inventaire</h2>
-            <div id="stockDisplay"></div>
+        <!-- 3. SECTIONS -->
+
+        <!-- STOCK -->
+        <div id="sec-stock" class="section">
+            <h2>📦 Inventaire Actuel</h2>
+            <div id="stock-list">Chargement...</div>
+            <button class="btn-action" style="background:#6c757d" onclick="window.goBack()">Retour Menu</button>
         </div>
 
-        <!-- SECTION 2: AJOUTER (SMART SCAN) -->
-        <div id="ajouterSection" class="content-section">
-            <button class="back-btn" onclick="goBackToMenu()">⬅️ Menu</button>
-            <h2 class="section-title">➕ Entrée Stock</h2>
-            
-            <button class="btn btn-scan" onclick="startScan('add')">📷 SCANNER (AUTO)</button>
+        <!-- AJOUTER -->
+        <div id="sec-add" class="section">
+            <h2>➕ Entrée Stock</h2>
+            <button class="btn-action btn-scan" onclick="window.startScanner('add')">📷 SCANNER</button>
             
             <div class="form-group">
-                <label>Code-Barres</label>
-                <input type="text" id="add_code" placeholder="Scanne ou tape..." oninput="checkCodeKnowledge(this.value)">
+                <label>Code</label>
+                <input type="text" id="add_code" placeholder="Scan ou saisie..." oninput="window.checkCode(this.value)">
             </div>
-
-            <div id="add_known_alert" class="alert alert-success" style="display:none;">
-                ✨ Produit reconnu ! Saisis juste la quantité.
-            </div>
+            
+            <div id="add_alert" class="alert alert-success" style="display:none">PRODUIT RECONNU ! ✅</div>
 
             <div class="form-group">
                 <label>Catégorie</label>
-                <select id="add_cat" onchange="updateTypes('add')">
-                    <option value="">Chargement...</option>
-                </select>
-                <button class="btn" style="background:#6c757d; margin-top:5px; font-size:0.8em; padding:8px;" onclick="newCategory()">+ Créer catégorie</button>
+                <select id="add_cat" onchange="window.updateTypes('add')"></select>
             </div>
 
             <div class="form-group suggestions">
-                <label>Type de Pièce</label>
-                <input type="text" id="add_type" placeholder="Ex: Filtre Huile..." oninput="filterTypes('add')" onfocus="filterTypes('add')" disabled>
-                <div id="add_suggestions" class="suggestions-list"></div>
+                <label>Type de pièce</label>
+                <input type="text" id="add_type" placeholder="Ex: Filtre Huile" oninput="window.filterTypes('add')" disabled>
+                <div id="add_sugg" class="suggestions-list"></div>
             </div>
 
             <div class="form-group">
                 <label>Quantité</label>
-                <input type="number" id="add_qty" value="1" min="1" style="font-size:1.5em; text-align:center; font-weight:bold;">
+                <input type="number" id="add_qty" value="1" style="text-align:center; font-size:1.5rem; font-weight:bold;">
             </div>
 
-            <button class="btn btn-primary" onclick="commitAdd()">VALIDER L'ENTRÉE</button>
+            <button class="btn-action" onclick="window.commitAdd()">VALIDER</button>
+            <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="window.goBack()">Annuler</button>
         </div>
 
-        <!-- SECTION 3: RETIRER (SCAN DISPO) -->
-        <div id="retirerSection" class="content-section">
-            <button class="back-btn" onclick="goBackToMenu()">⬅️ Menu</button>
-            <h2 class="section-title">➖ Sortie Stock</h2>
+        <!-- RETIRER -->
+        <div id="sec-remove" class="section">
+            <h2>➖ Sortie Stock</h2>
+            <button class="btn-action btn-scan" onclick="window.startScanner('remove')">📷 SCANNER SORTIE</button>
+            
+            <div class="form-group">
+                <label>Code (si manuel)</label>
+                <input type="text" id="rem_code" placeholder="Scan ou saisie..." oninput="window.checkCodeRemove(this.value)">
+            </div>
 
-            <button class="btn btn-scan" onclick="startScan('remove')">📷 SCANNER POUR RETIRER</button>
-
-            <h3 style="color:#E30066; margin:15px 0;">Panier de retrait</h3>
-            <div class="rafale-list" id="removeList">
+            <div id="rem_cart" class="rafale-list">
                 <div style="text-align:center; color:#999; padding:20px;">Panier vide</div>
             </div>
-            
-            <button class="btn btn-primary" onclick="commitRemove()">VALIDER LA SORTIE</button>
 
-            <hr style="margin:20px 0; border-top:2px dashed #eee;">
+            <button class="btn-action" onclick="window.commitRemove()">VALIDER SORTIE</button>
             
-            <h3 style="color:#666; font-size:1em;">Ajout Manuel</h3>
-            <div class="form-group">
-                <label>Catégorie</label>
-                <select id="rem_cat" onchange="updateTypes('rem')">
-                    <option value="">Chargement...</option>
-                </select>
-            </div>
-            <div class="form-group suggestions">
-                <label>Type</label>
-                <input type="text" id="rem_type" disabled oninput="filterTypes('rem')" onfocus="filterTypes('rem')">
-                <div id="rem_suggestions" class="suggestions-list"></div>
-            </div>
-            <div class="form-group">
-                <label>Quantité</label>
-                <input type="number" id="rem_qty" value="1" min="1">
-            </div>
-            <button class="btn" style="background:#6c757d;" onclick="manualAddToRemove()">Ajouter au panier</button>
+            <hr style="margin:20px 0;">
+            <h3>Ajout Manuel</h3>
+            <div class="form-group"><label>Catégorie</label><select id="rem_cat" onchange="window.updateTypes('rem')"></select></div>
+            <div class="form-group suggestions"><label>Type</label><input type="text" id="rem_type" disabled oninput="window.filterTypes('rem')"><div id="rem_sugg" class="suggestions-list"></div></div>
+            <div class="form-group"><label>Qté</label><input type="number" id="rem_qty" value="1"></div>
+            <button class="btn-action" style="background:#17a2b8" onclick="window.manualRemoveAdd()">Ajouter au panier</button>
+
+            <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="window.goBack()">Retour</button>
         </div>
 
-        <!-- SECTION 4: MAGASINIER (RAFALE) -->
-        <div id="magasinierSection" class="content-section">
-            <button class="back-btn" onclick="goBackToMenu()">⬅️ Menu</button>
-            <h2 class="section-title">🔫 Mode Rafale</h2>
-            <p style="color:#666; margin-bottom:15px; font-size:0.9em;">Scanne à la suite. Le stock se mettra à jour d'un coup.</p>
+        <!-- MAGASINIER (RAFALE) -->
+        <div id="sec-rafale" class="section">
+            <h2>🔫 Mode Rafale</h2>
+            <p style="color:#666; margin-bottom:15px;">Scanne à la chaîne. Tout s'ajoute à la fin.</p>
+            
+            <button class="btn-action btn-scan" onclick="window.startScanner('rafale')">🚀 DÉMARRER SCAN</button>
 
-            <button class="btn btn-scan" onclick="startScan('rafale')">🚀 DÉMARRER LE SCAN RAFALE</button>
-
-            <div id="rafaleList" class="rafale-list">
-                <div style="text-align:center; padding:20px; color:#aaa;">En attente de scan...</div>
+            <div id="rafale-list" class="rafale-list">
+                <div style="text-align:center; padding:20px; color:#aaa;">En attente...</div>
             </div>
 
-            <div style="display:flex; gap:10px;">
-                <button class="btn btn-danger" onclick="clearRafale()">VIDER</button>
-                <button class="btn btn-primary" onclick="commitRafale()">TOUT ENREGISTRER ✅</button>
-            </div>
+            <button class="btn-action" onclick="window.commitRafale()">ENREGISTRER TOUT ✅</button>
+            <button class="btn-action" style="background:#dc3545; margin-top:10px" onclick="window.clearRafale()">Vider</button>
+            <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="window.goBack()">Retour</button>
         </div>
 
-        <!-- SECTION 5: PREVISION -->
-        <div id="previsionSection" class="content-section">
-            <button class="back-btn" onclick="goBackToMenu()">⬅️ Menu</button>
-            <h2 class="section-title">📊 Prévisions</h2>
-            <div id="enginsListPrev" style="margin-bottom:15px;"></div>
-            <button class="btn btn-primary" onclick="calcPrevision()">Lancer Analyse</button>
-            <div id="prevResults" style="margin-top:15px;"></div>
+        <!-- PREVISION -->
+        <div id="sec-prev" class="section">
+            <h2>📊 Prévisions Maintenance</h2>
+            <div id="prev-engins-list" style="margin-bottom:20px"></div>
+            <button class="btn-action" onclick="window.calcPrev()">CALCULER</button>
+            <div id="prev-res" style="margin-top:20px"></div>
+            <button class="btn-action" style="background:#6c757d; margin-top:10px" onclick="window.goBack()">Retour</button>
         </div>
 
     </div>
 
-    <!-- FIREBASE -->
+    <!-- FIREBASE MODULE -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-        import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+        import { getDatabase, ref, set, get, onValue, child } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
+        // --- CONFIG ---
         const firebaseConfig = { apiKey: "AIzaSyDR1T9ss36NFuQWvq3ypwf7nUcqRhq5dQ8", authDomain: "maintenance-c2mi.firebaseapp.com", databaseURL: "https://maintenance-c2mi-default-rtdb.firebaseio.com", projectId: "maintenance-c2mi", storageBucket: "maintenance-c2mi.firebasestorage.app", messagingSenderId: "224545367081", appId: "1:224545367081:web:378d28b892528754c6a838" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- DONNEES ---
-        const dbEngins = {
+        // --- DONNEES MAITRES ---
+        const DB_ENGINS = {
             "4' AXE": ["TR 020", "TR 062", "TR 083", "TR 104", "TR 111", "TR 116", "TR 127", "TR 136", "TR 141"],
             "ELAN": ["C3 N°235", "ELAN D : 032"],
             "SKYRAILLER": ["C14 N°32", "C14 green N°83"],
@@ -263,496 +235,450 @@
             "ACX": ["ACX 01", "ACX 02"]
         };
 
-        let currentMachine = '';
-        let stockData = {};
-        // Initialisation par défaut pour éviter l'affichage vide
-        let categories = {
+        let CATEGORIES = {
             'filtration': { name: 'Filtration', types: ['Filtre Huile', 'Filtre Gasoil', 'Filtre Air'] },
             'freinage': { name: 'Freinage', types: ['Plaquettes', 'Disques'] }
         };
-        let html5QrcodeScanner = null;
-        let scanMode = ''; 
+
+        let currentMachine = "";
+        let stockData = {};
+        let scanner = null;
+        let scanMode = ""; 
         let rafaleBuffer = [];
         let removeBuffer = [];
 
-        // --- INIT ---
+        // --- GLOBAL FUNCTIONS ---
+        // ON ATTACHE TOUT A WINDOW POUR EVITER LES BUGS DE SCOPE
+        
         window.onload = () => {
-            initMachineMenu();
-            syncCategories(); // Lance la synchro Firebase
+            renderMachines();
+            loadCategories();
         };
 
-        function initMachineMenu() {
-            const grid = document.getElementById('machineSelection');
-            grid.innerHTML = '';
+        function renderMachines() {
+            const grid = document.getElementById('view-machines');
+            grid.innerHTML = "";
             const icons = { "4' AXE": "🚂", "ELAN": "🚅", "SKYRAILLER": "🚄", "Pelle UNAC 22 TRR": "🏗️", "Debroussailleuse R/R": "🌿", "ACX": "🚆" };
             
-            for (let type in dbEngins) {
-                const div = document.createElement('div');
-                div.className = 'machine-card';
-                div.innerHTML = `<div class="machine-icon">${icons[type]||'🚜'}</div><div class="machine-name">${type}</div>`;
-                div.onclick = () => selectMachine(type);
-                grid.appendChild(div);
+            for(let key in DB_ENGINS) {
+                grid.innerHTML += `
+                    <div class="card-machine" onclick="window.selectMachine('${key}')">
+                        <span class="icon">${icons[key] || '🚜'}</span>
+                        <span class="name">${key}</span>
+                    </div>
+                `;
             }
         }
 
-        function syncCategories() {
-            // Afficher les catégories par défaut immédiatement
-            updateAllSelects();
-
-            // Puis récupérer les vraies de Firebase
+        function loadCategories() {
             const catRef = ref(db, 'categories_stock');
             onValue(catRef, (snap) => {
-                if (snap.exists()) {
-                    categories = snap.val();
+                if(snap.exists()) {
+                    CATEGORIES = snap.val();
                 } else {
-                    // Si vide sur Firebase, on envoie les défauts
-                    set(catRef, categories);
+                    set(catRef, CATEGORIES);
                 }
-                updateAllSelects();
+                updateSelects();
+            });
+            updateSelects(); 
+        }
+
+        function updateSelects() {
+            const ids = ['add_cat', 'rem_cat'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if(!el) return;
+                el.innerHTML = '<option value="">-- Catégorie --</option>';
+                for(let k in CATEGORIES) {
+                    el.innerHTML += `<option value="${k}">${CATEGORIES[k].name}</option>`;
+                }
             });
         }
 
         // --- NAVIGATION ---
-        window.selectMachine = function(machine) {
-            currentMachine = machine;
-            document.getElementById('machineSelection').classList.add('hidden');
-            document.getElementById('machineHeader').classList.add('active');
-            document.getElementById('machineTitle').innerText = machine;
-            document.getElementById('menuButtons').classList.add('active');
-            
-            onValue(ref(db, 'stock_filtres_v2/' + machine), (snap) => {
+        window.selectMachine = (key) => {
+            currentMachine = key;
+            document.getElementById('view-machines').style.display = 'none';
+            document.getElementById('machine-nav').classList.add('active');
+            document.getElementById('machine-title').innerText = key;
+            document.getElementById('view-menu').classList.add('active');
+
+            // Charger le stock
+            onValue(ref(db, `stock_filtres_v2/${currentMachine}`), (snap) => {
                 stockData = snap.val() || {};
                 renderStock();
             });
+        };
+
+        window.goHome = () => {
+            currentMachine = "";
+            document.getElementById('view-machines').style.display = 'grid';
+            document.getElementById('machine-nav').classList.remove('active');
+            document.getElementById('view-menu').classList.remove('active');
+            hideAllSections();
+        };
+
+        window.nav = (section) => {
+            document.getElementById('view-menu').classList.remove('active');
+            hideAllSections();
+            document.getElementById(`sec-${section}`).classList.add('active');
+            if(section === 'prev') renderPrevList();
+            if(section === 'add' || section === 'remove') updateSelects();
+        };
+
+        window.goBack = () => {
+            hideAllSections();
+            document.getElementById('view-menu').classList.add('active');
+        };
+
+        function hideAllSections() {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         }
 
-        window.goHome = function() {
-            document.getElementById('machineHeader').classList.remove('active');
-            document.getElementById('menuButtons').classList.remove('active');
-            closeAllSections();
-            document.getElementById('machineSelection').classList.remove('hidden');
-            currentMachine = '';
-        }
-
-        window.openSection = function(id) {
-            document.getElementById('menuButtons').classList.remove('active');
-            closeAllSections();
-            document.getElementById(id + 'Section').classList.add('active');
-            
-            if(id === 'prevision') renderPrevisionList();
-            if(id === 'ajouter' || id === 'retirer') updateAllSelects();
-        }
-
-        window.goBackToMenu = function() {
-            closeAllSections();
-            document.getElementById('menuButtons').classList.add('active');
-        }
-
-        function closeAllSections() {
-            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
-        }
-
-        // --- AFFICHAGE STOCK ---
+        // --- STOCK DISPLAY ---
         function renderStock() {
-            const div = document.getElementById('stockDisplay');
-            div.innerHTML = '';
-            
-            let hasStock = false;
+            const list = document.getElementById('stock-list');
+            list.innerHTML = "";
+            let empty = true;
 
-            for (let [catId, catData] of Object.entries(categories)) {
-                const stockCat = stockData[catId] || {};
-                const typesInStock = Object.keys(stockCat);
-                if (typesInStock.length === 0) continue;
-
-                hasStock = true;
-                const block = document.createElement('div');
-                block.className = 'category-block';
-                block.innerHTML = `<div class="cat-title">📂 ${catData.name}</div>`;
-
-                let content = '';
-                typesInStock.forEach(type => {
-                    const count = (stockCat[type] || []).length;
-                    content += `
-                        <div class="stock-row">
-                            <span style="font-weight:600">${type}</span>
-                            <span class="stock-qty">${count}</span>
-                        </div>
-                    `;
-                });
-                block.innerHTML += content;
-                div.appendChild(block);
-            }
-
-            if(!hasStock) div.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">Stock vide pour cet engin.</div>';
-        }
-
-        // --- SCANNER SYSTEM ---
-        window.startScan = function(mode) {
-            scanMode = mode;
-            document.getElementById('scanner-modal').style.display = 'flex';
-            
-            html5QrcodeScanner = new Html5Qrcode("reader");
-            html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
-                (decodedText) => {
-                    handleScanResult(decodedText);
-                    if(scanMode !== 'rafale') stopScanner(); 
-                    else {
-                        // Pause pour éviter les doublons instantanés
-                        html5QrcodeScanner.pause();
-                        setTimeout(() => html5QrcodeScanner.resume(), 1500);
-                    }
-                },
-                (errorMessage) => { /* ignore */ }
-            ).catch(err => alert("Erreur Caméra: " + err));
-        }
-
-        window.stopScanner = function() {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
-                    document.getElementById('scanner-modal').style.display = 'none';
-                    html5QrcodeScanner.clear();
-                });
-            } else {
-                document.getElementById('scanner-modal').style.display = 'none';
-            }
-        }
-
-        // --- LOGIQUE INTELLIGENTE ---
-        function findItemByCode(code) {
-            for(let cat in stockData) {
-                for(let type in stockData[cat]) {
-                    const items = stockData[cat][type];
-                    if(items.some(i => i.code === code)) return { cat, type };
+            for(let catKey in CATEGORIES) {
+                const catStock = stockData[catKey] || {};
+                const types = Object.keys(catStock);
+                
+                if(types.length > 0) {
+                    empty = false;
+                    let html = `<div class="stock-cat"><div class="stock-cat-title">${CATEGORIES[catKey].name}</div>`;
+                    types.forEach(t => {
+                        html += `
+                            <div class="stock-item">
+                                <span>${t}</span>
+                                <span class="badge">${catStock[t].length}</span>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                    list.innerHTML += html;
                 }
             }
-            // Recherche aussi dans l'historique global si besoin (optionnel)
-            return null;
+            if(empty) list.innerHTML = "<div style='text-align:center; padding:20px; color:#999'>Stock vide pour cet engin.</div>";
         }
 
-        function handleScanResult(code) {
-            // Son
-            const audio = new AudioContext();
-            const osc = audio.createOscillator();
-            const gain = audio.createGain();
-            osc.connect(gain); gain.connect(audio.destination);
-            osc.frequency.value = 1000; gain.gain.value = 0.1;
-            osc.start(); setTimeout(() => osc.stop(), 100);
+        // --- AJOUT ---
+        window.checkCode = (code) => {
+            const item = findItem(code);
+            const alertBox = document.getElementById('add_alert');
+            const catSel = document.getElementById('add_cat');
+            const typeInp = document.getElementById('add_type');
 
-            if (scanMode === 'add') {
-                document.getElementById('add_code').value = code;
-                window.checkCodeKnowledge(code);
-            } 
-            else if (scanMode === 'remove') {
-                const info = findItemByCode(code);
-                if (info) {
-                    addToRemoveBuffer(info.cat, info.type, 1);
-                    alert(`✅ ${info.type} ajouté au panier.`);
-                } else {
-                    alert("⚠️ Produit inconnu dans le stock de CET engin.");
-                }
-            }
-            else if (scanMode === 'rafale') {
-                handleRafaleScan(code);
-            }
-        }
-
-        // --- MODE AJOUT ---
-        window.checkCodeKnowledge = function(code) {
-            const info = findItemByCode(code);
-            const alertBox = document.getElementById('add_known_alert');
-            const catSelect = document.getElementById('add_cat');
-            const typeInput = document.getElementById('add_type');
-
-            if (info) {
+            if(item) {
                 alertBox.style.display = 'block';
-                catSelect.value = info.cat;
-                updateTypes('add'); 
-                setTimeout(() => { 
-                    typeInput.value = info.type;
-                    document.getElementById('add_qty').focus();
-                }, 100);
+                catSel.value = item.cat;
+                window.updateTypes('add');
+                setTimeout(() => typeInp.value = item.type, 50);
             } else {
                 alertBox.style.display = 'none';
             }
+        };
+
+        function findItem(code) {
+            for(let c in stockData) {
+                for(let t in stockData[c]) {
+                    if(stockData[c][t].some(i => i.code === code)) return {cat: c, type: t};
+                }
+            }
+            return null;
         }
 
-        window.updateTypes = function(prefix) {
-            const cat = document.getElementById(prefix + '_cat').value;
-            const input = document.getElementById(prefix + '_type');
-            input.disabled = !cat;
-            input.value = '';
-        }
+        window.updateTypes = (prefix) => {
+            const cat = document.getElementById(`${prefix}_cat`).value;
+            const inp = document.getElementById(`${prefix}_type`);
+            inp.disabled = !cat;
+            inp.value = "";
+        };
 
-        window.filterTypes = function(prefix) {
-            const cat = document.getElementById(prefix + '_cat').value;
-            const input = document.getElementById(prefix + '_type');
-            const list = document.getElementById(prefix + '_suggestions');
+        window.filterTypes = (prefix) => {
+            const cat = document.getElementById(`${prefix}_cat`).value;
+            const inp = document.getElementById(`${prefix}_type`);
+            const sugg = document.getElementById(`${prefix}_sugg`);
+            const val = inp.value.toLowerCase();
             
             if(!cat) return;
-            const val = input.value.toLowerCase();
-            const types = categories[cat].types || [];
-            
-            list.innerHTML = '';
-            const filtered = types.filter(t => t.toLowerCase().includes(val));
-            
-            filtered.forEach(t => {
+
+            const types = CATEGORIES[cat].types || [];
+            const matches = types.filter(t => t.toLowerCase().includes(val));
+
+            sugg.innerHTML = "";
+            sugg.style.display = 'block';
+
+            matches.forEach(t => {
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
                 div.innerText = t;
-                div.onclick = () => { input.value = t; list.classList.remove('active'); };
-                list.appendChild(div);
+                div.onclick = () => { inp.value = t; sugg.style.display = 'none'; };
+                sugg.appendChild(div);
             });
 
-            if(val.length > 0 && !filtered.includes(input.value)) {
-                const create = document.createElement('div');
-                create.className = 'suggestion-item';
-                create.innerHTML = `<strong>➕ Créer "${input.value}"</strong>`;
-                create.onclick = () => { 
-                    if(!categories[cat].types.includes(input.value)) {
-                        categories[cat].types.push(input.value);
-                        set(ref(db, 'categories_stock'), categories);
+            if(val && !matches.includes(inp.value)) {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerHTML = `<strong>+ Créer "${inp.value}"</strong>`;
+                div.onclick = () => {
+                    if(!CATEGORIES[cat].types.includes(inp.value)) {
+                        CATEGORIES[cat].types.push(inp.value);
+                        set(ref(db, 'categories_stock'), CATEGORIES);
                     }
-                    list.classList.remove('active');
+                    sugg.style.display = 'none';
                 };
-                list.appendChild(create);
+                sugg.appendChild(div);
             }
+            document.addEventListener('click', (e) => {
+                if(e.target !== inp) sugg.style.display = 'none';
+            }, {once: true});
+        };
 
-            list.classList.add('active');
-            
-            document.addEventListener('click', e => {
-                if(e.target !== input) list.classList.remove('active');
-            }, {once:true});
-        }
-
-        window.commitAdd = function() {
-            const code = document.getElementById('add_code').value;
+        // --- SAUVEGARDE AJOUT ROBUSTE ---
+        window.commitAdd = () => {
             const cat = document.getElementById('add_cat').value;
             const type = document.getElementById('add_type').value;
             const qty = parseInt(document.getElementById('add_qty').value);
+            const code = document.getElementById('add_code').value;
 
             if(!cat || !type || !qty) return alert("Remplis tout !");
 
             const path = `stock_filtres_v2/${currentMachine}/${cat}/${type}`;
-            const currentList = stockData[cat]?.[type] || [];
             
-            for(let i=0; i<qty; i++) currentList.push({code, date: new Date().toISOString()});
-            
-            set(ref(db, path), currentList).then(() => {
-                alert(`✅ +${qty} ${type} ajoutés !`);
-                document.getElementById('add_code').value = '';
-                document.getElementById('add_known_alert').style.display = 'none';
-                document.getElementById('add_qty').value = 1;
-                document.getElementById('add_type').value = '';
+            // LECTURE DE LA DB AVANT D'ECRIRE POUR EVITER L'ECRASEMENT
+            get(child(ref(db), path)).then((snapshot) => {
+                let currentList = snapshot.val() || [];
+                // Sécurité : conversion en tableau si bug
+                if(!Array.isArray(currentList)) currentList = Object.values(currentList);
+
+                for(let i=0; i<qty; i++) {
+                    currentList.push({ code: code, date: new Date().toISOString() });
+                }
+
+                set(ref(db, path), currentList).then(() => {
+                    alert("✅ Stock ajouté !");
+                    document.getElementById('add_code').value = "";
+                    document.getElementById('add_alert').style.display = 'none';
+                    document.getElementById('add_qty').value = 1;
+                }).catch(err => alert("Erreur sauvegarde: " + err));
             });
-        }
+        };
 
-        // --- MODE RETRAIT ---
-        function addToRemoveBuffer(cat, type, qty) {
-            const dispo = (stockData[cat]?.[type] || []).length;
-            const existing = removeBuffer.find(i => i.cat === cat && i.type === type);
-            const qtyInCart = existing ? existing.qty : 0;
+        // --- SCANNER ---
+        window.startScanner = (mode) => {
+            scanMode = mode;
+            document.getElementById('scanner-modal').style.display = 'flex';
+            scanner = new Html5Qrcode("reader");
+            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+                onScanSuccess
+            ).catch(err => alert("Erreur Cam: " + err));
+        };
 
-            if (dispo < (qty + qtyInCart)) return alert(`Stock insuffisant ! (Dispo: ${dispo})`);
+        window.closeScanner = () => {
+            if(scanner) scanner.stop().then(() => {
+                scanner.clear();
+                document.getElementById('scanner-modal').style.display = 'none';
+            });
+            else document.getElementById('scanner-modal').style.display = 'none';
+        };
 
-            if (existing) {
-                existing.qty += qty;
-            } else {
-                removeBuffer.push({cat, type, qty});
+        function onScanSuccess(code) {
+            if(scanMode === 'add') {
+                document.getElementById('add_code').value = code;
+                window.checkCode(code);
+                window.closeScanner();
             }
-            renderRemoveList();
+            else if(scanMode === 'remove') {
+                document.getElementById('rem_code').value = code;
+                window.checkCodeRemove(code);
+                window.closeScanner();
+            }
+            else if(scanMode === 'rafale') {
+                handleRafale(code);
+                scanner.pause();
+                setTimeout(() => scanner.resume(), 1500);
+            }
         }
 
-        window.manualAddToRemove = function() {
+        // --- RETRAIT ---
+        window.checkCodeRemove = (code) => {
+            const item = findItem(code);
+            if(item) {
+                addToRemoveCart(item.cat, item.type, 1);
+                document.getElementById('rem_code').value = "";
+            } else {
+                alert("Produit inconnu dans ce stock.");
+            }
+        };
+
+        window.manualRemoveAdd = () => {
             const cat = document.getElementById('rem_cat').value;
             const type = document.getElementById('rem_type').value;
             const qty = parseInt(document.getElementById('rem_qty').value);
             if(!cat || !type) return;
-            addToRemoveBuffer(cat, type, qty);
+            addToRemoveCart(cat, type, qty);
+        };
+
+        function addToRemoveCart(cat, type, qty) {
+            const dispo = stockData[cat]?.[type]?.length || 0;
+            const inCart = removeBuffer.find(i => i.cat === cat && i.type === type)?.qty || 0;
+            
+            if(dispo < (qty + inCart)) return alert(`Pas assez de stock ! (Dispo: ${dispo})`);
+
+            const existing = removeBuffer.find(i => i.cat === cat && i.type === type);
+            if(existing) existing.qty += qty;
+            else removeBuffer.push({cat, type, qty});
+            
+            renderRemoveCart();
         }
 
-        function renderRemoveList() {
-            const div = document.getElementById('removeList');
-            if(removeBuffer.length === 0) {
-                div.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">Panier vide</div>';
-                return;
-            }
-            div.innerHTML = '';
+        function renderRemoveCart() {
+            const div = document.getElementById('rem_cart');
+            if(removeBuffer.length === 0) return div.innerHTML = "<div style='text-align:center;color:#999'>Vide</div>";
+            
+            div.innerHTML = "";
             removeBuffer.forEach((item, idx) => {
                 div.innerHTML += `
                     <div class="rafale-item">
-                        <div>
-                            <div class="rafale-info">${item.qty}x ${item.type}</div>
-                            <div class="rafale-cat">${categories[item.cat].name}</div>
-                        </div>
-                        <button class="btn btn-danger" style="width:auto; padding:5px 10px;" onclick="removeFromRemoveList(${idx})">X</button>
+                        <span>${item.qty}x ${item.type}</span>
+                        <button onclick="window.delRem(${idx})" style="background:red; color:white; border:none; padding:5px;">X</button>
                     </div>
                 `;
             });
         }
 
-        window.removeFromRemoveList = function(idx) {
-            removeBuffer.splice(idx, 1);
-            renderRemoveList();
-        }
+        window.delRem = (idx) => { removeBuffer.splice(idx, 1); renderRemoveCart(); };
 
-        window.commitRemove = function() {
+        window.commitRemove = () => {
             if(removeBuffer.length === 0) return;
-            removeBuffer.forEach(item => {
-                const list = stockData[item.cat][item.type];
-                for(let i=0; i<item.qty; i++) list.pop(); 
-            });
-            set(ref(db, `stock_filtres_v2/${currentMachine}`), stockData).then(() => {
-                alert("✅ Stock mis à jour !");
-                removeBuffer = [];
-                renderRemoveList();
-            });
-        }
-
-        // --- MODE MAGASINIER (RAFALE) ---
-        function handleRafaleScan(code) {
-            let info = findItemByCode(code);
             
-            if (info) {
-                rafaleBuffer.push({ code, cat: info.cat, type: info.type, qty: 1 });
-                renderRafaleList();
-            } else {
-                // Pour éviter de bloquer le scan trop longtemps, on demande vite fait
-                // Mais sur mobile les prompts c'est pas ouf. 
-                // V1: On demande via prompt
-                // V2 (Amélioration): On met en liste "Inconnu" et on traite après. 
-                // Ici on reste simple :
-                stopScanner();
-                const typeName = prompt("Produit Inconnu ! Nom du produit ?");
-                if(typeName) {
-                    // On suppose catégorie filtration par défaut si inconnu pour aller vite
-                    const defCat = 'filtration';
-                    rafaleBuffer.push({ code, cat: defCat, type: typeName, qty: 1 });
-                    renderRafaleList();
-                }
-                // Pas de restart auto pour laisser l'user respirer
-            }
-        }
-
-        function renderRafaleList() {
-            const div = document.getElementById('rafaleList');
-            const groups = {};
-            rafaleBuffer.forEach(i => {
-                const key = i.cat + '|' + i.type;
-                if(!groups[key]) groups[key] = 0;
-                groups[key] += i.qty;
-            });
-
-            if(Object.keys(groups).length === 0) {
-                div.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">En attente de scan...</div>';
-                return;
-            }
-
-            div.innerHTML = '';
-            for(let key in groups) {
-                const [cat, type] = key.split('|');
-                div.innerHTML += `
-                    <div class="rafale-item">
-                        <div>
-                            <div class="rafale-info">${groups[key]}x ${type}</div>
-                            <div class="rafale-cat">${categories[cat]?.name || cat}</div>
-                        </div>
-                        <span style="font-size:1.5em">📦</span>
-                    </div>
-                `;
-            }
-        }
-
-        window.clearRafale = function() {
-            rafaleBuffer = [];
-            renderRafaleList();
-        }
-
-        window.commitRafale = function() {
-            if(rafaleBuffer.length === 0) return;
-            rafaleBuffer.forEach(item => {
-                if(!stockData[item.cat]) stockData[item.cat] = {};
-                if(!stockData[item.cat][item.type]) stockData[item.cat][item.type] = [];
-                stockData[item.cat][item.type].push({ code: item.code, date: new Date().toISOString() });
-                
-                if(categories[item.cat] && !categories[item.cat].types.includes(item.type)) {
-                    categories[item.cat].types.push(item.type);
-                }
-            });
-            set(ref(db, 'categories_stock'), categories);
-            set(ref(db, `stock_filtres_v2/${currentMachine}`), stockData).then(() => {
-                alert(`✅ ${rafaleBuffer.length} articles ajoutés !`);
-                clearRafale();
-            });
-        }
-
-        // --- PREVISIONS ---
-        function renderPrevisionList() {
-            const div = document.getElementById('enginsListPrev');
-            div.innerHTML = '';
-            const engins = dbEngins[currentMachine] || [];
-            engins.forEach((nom, i) => {
-                div.innerHTML += `
-                    <div style="background:#f8f9fa; padding:10px; margin-bottom:5px; border-radius:8px; display:flex; align-items:center;">
-                        <input type="checkbox" id="prev_check_${i}" style="width:20px; height:20px; margin-right:10px;">
-                        <label for="prev_check_${i}" style="color:#333; margin:0;">${nom}</label>
-                    </div>
-                `;
-            });
-        }
-
-        window.calcPrevision = function() {
-            let count = 0;
-            const engins = dbEngins[currentMachine] || [];
-            engins.forEach((e, i) => {
-                if(document.getElementById(`prev_check_${i}`).checked) count++;
-            });
-
-            const resDiv = document.getElementById('prevResults');
-            if(count === 0) {
-                resDiv.innerHTML = '<div class="alert alert-danger">Sélectionne au moins un engin !</div>';
-                return;
-            }
-
-            let html = `<h3>Besoin pour ${count} intervention(s)</h3>`;
-            const typesCheck = categories['filtration']?.types || [];
+            // Pour le retrait, on doit aussi lire la DB avant d'écrire pour être sûr
+            // Mais comme c'est complexe de lire plusieurs paths, on fait un par un ou on trust le stockData local rafraichi
+            // Ici méthode sûre : On met à jour un par un
             
-            typesCheck.forEach(type => {
-                const stock = (stockData['filtration']?.[type] || []).length;
-                const manque = Math.max(0, count - stock);
-                if(manque > 0) html += `<div class="alert alert-danger">❌ <strong>${type}</strong> : Manque ${manque} (Stock: ${stock})</div>`;
-                else html += `<div class="alert alert-success">✅ <strong>${type}</strong> : OK (Stock: ${stock})</div>`;
-            });
-            resDiv.innerHTML = html;
-        }
-
-        // --- UTILS UI (CORRECTION AFFICHAGE CATEGORIE) ---
-        function updateAllSelects() {
-            const ids = ['add_cat', 'rem_cat'];
-            ids.forEach(id => {
-                const select = document.getElementById(id);
-                if(!select) return;
-                
-                // On vide d'abord
-                select.innerHTML = '<option value="">-- Choisir Catégorie --</option>';
-                
-                // On remplit proprement
-                Object.keys(categories).forEach(key => {
-                    const opt = document.createElement('option');
-                    opt.value = key;
-                    opt.text = categories[key].name;
-                    select.add(opt);
+            let promises = removeBuffer.map(item => {
+                const path = `stock_filtres_v2/${currentMachine}/${item.cat}/${item.type}`;
+                return get(child(ref(db), path)).then(snap => {
+                    let list = snap.val() || [];
+                    for(let i=0; i<item.qty; i++) list.pop();
+                    return set(ref(db, path), list);
                 });
             });
+
+            Promise.all(promises).then(() => {
+                alert("✅ Stock retiré !");
+                removeBuffer = [];
+                renderRemoveCart();
+            });
+        };
+
+        // --- RAFALE ---
+        function handleRafale(code) {
+            const item = findItem(code);
+            if(item) {
+                rafaleBuffer.push({ code, cat: item.cat, type: item.type, qty: 1 });
+            } else {
+                window.closeScanner();
+                const typeName = prompt("Produit Inconnu ! Nom ?");
+                if(typeName) {
+                    rafaleBuffer.push({ code, cat: 'filtration', type: typeName, qty: 1 });
+                    window.startScanner('rafale'); 
+                }
+            }
+            renderRafale();
         }
 
-        window.newCategory = function() {
-            const nom = prompt("Nom de la catégorie ?");
-            if(!nom) return;
-            const id = nom.toLowerCase().replace(/\s/g, '_');
-            categories[id] = { name: nom, types: [] };
-            set(ref(db, 'categories_stock'), categories);
-            updateAllSelects();
+        function renderRafale() {
+            const div = document.getElementById('rafale-list');
+            const groups = {};
+            rafaleBuffer.forEach(i => {
+                const k = i.type;
+                if(!groups[k]) groups[k] = 0;
+                groups[k] += i.qty;
+            });
+            
+            div.innerHTML = "";
+            for(let k in groups) {
+                div.innerHTML += `<div class="rafale-item"><span>${groups[k]}x ${k}</span><span>📦</span></div>`;
+            }
         }
+
+        window.clearRafale = () => { rafaleBuffer = []; renderRafale(); };
+
+        window.commitRafale = () => {
+            if(rafaleBuffer.length === 0) return;
+            
+            // Grouper par type pour minimiser les écritures
+            const updates = {}; // cat|type -> [{code...}]
+
+            rafaleBuffer.forEach(item => {
+                const key = `${item.cat}|${item.type}`;
+                if(!updates[key]) updates[key] = [];
+                updates[key].push({code: item.code, date: new Date().toISOString()});
+                
+                // Save categorie if new
+                if(CATEGORIES[item.cat] && !CATEGORIES[item.cat].types.includes(item.type)) {
+                    CATEGORIES[item.cat].types.push(item.type);
+                    set(ref(db, 'categories_stock'), CATEGORIES);
+                }
+            });
+
+            // Ecriture Sûre
+            const promises = Object.keys(updates).map(key => {
+                const [cat, type] = key.split('|');
+                const path = `stock_filtres_v2/${currentMachine}/${cat}/${type}`;
+                
+                return get(child(ref(db), path)).then(snap => {
+                    let list = snap.val() || [];
+                    if(!Array.isArray(list)) list = Object.values(list);
+                    list.push(...updates[key]);
+                    return set(ref(db, path), list);
+                });
+            });
+
+            Promise.all(promises).then(() => {
+                alert(`✅ Tout est enregistré !`);
+                window.clearRafale();
+            });
+        };
+
+        // --- PREVISION ---
+        window.renderPrevList = () => {
+            const div = document.getElementById('prev-engins-list');
+            div.innerHTML = "";
+            const list = DB_ENGINS[currentMachine] || [];
+            list.forEach((nom, i) => {
+                div.innerHTML += `
+                    <div class="prev-item">
+                        <input type="checkbox" id="chk_${i}">
+                        <label for="chk_${i}">${nom}</label>
+                    </div>
+                `;
+            });
+        };
+
+        window.calcPrev = () => {
+            const list = DB_ENGINS[currentMachine] || [];
+            let count = 0;
+            list.forEach((_, i) => { if(document.getElementById(`chk_${i}`).checked) count++; });
+            
+            if(count === 0) return alert("Sélectionne au moins un engin !");
+
+            const res = document.getElementById('prev-res');
+            let html = "";
+            const types = CATEGORIES['filtration']?.types || ['Filtre Huile', 'Filtre Air']; 
+            
+            types.forEach(t => {
+                const stock = stockData['filtration']?.[t]?.length || 0;
+                const manq = Math.max(0, count - stock);
+                const color = manq > 0 ? "alert-danger" : "alert-success";
+                const txt = manq > 0 ? `❌ ${t} : Manque ${manq}` : `✅ ${t} : OK`;
+                html += `<div class="alert ${color}">${txt} (Stock: ${stock})</div>`;
+            });
+            res.innerHTML = html;
+        };
 
     </script>
 </body>
