@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - MASTER V7</title>
+    <title>C2MI STOCK - MASTER V8</title>
     
     <style>
         :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; --dark: #880e4f; }
@@ -67,6 +67,10 @@
         .rafale-list { max-height: 250px; overflow-y: auto; background: #f8f9fa; border-radius: 8px; padding: 10px; margin: 15px 0; border: 1px solid #ddd; }
         .rafale-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 4px solid #28a745; align-items: center; }
 
+        /* GESTION CATEGORIES (NOUVEAU) */
+        .cat-manager-item { display: flex; justify-content: space-between; align-items: center; background: white; border: 1px solid #eee; padding: 10px; margin-bottom: 5px; border-radius: 6px; }
+        .btn-delete-cat { background: #dc3545; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-weight: bold; }
+
         /* PREVISION - ORACLE */
         .oracle-card { background: #333; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid #FFD700; }
         .oracle-title { font-weight: 900; text-transform: uppercase; font-size: 1.1rem; border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 10px; color: #FFD700; }
@@ -122,7 +126,7 @@
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition V7 (Oracle)</p>
+            <p>Maître Guigui Edition V8 (Nettoyeur)</p>
         </div>
 
         <div id="view-machines" class="grid-machines"></div>
@@ -200,6 +204,11 @@
             <div id="rafale-list" class="rafale-list"><div style="text-align:center; padding:20px; color:#aaa;">En attente...</div></div>
             <button class="btn-action" onclick="commitRafale()">ENREGISTRER TOUT ✅</button>
             <button class="btn-action" style="background:#dc3545; margin-top:10px" onclick="clearRafale()">VIDER LA LISTE</button>
+            
+            <hr style="margin:20px 0; border:0; border-top:2px dashed #aaa;">
+            <h3 style="color:#666; text-align:center; margin-bottom:10px;">🗑️ Gestion des Catégories</h3>
+            <div id="cat-manager-list" class="rafale-list"></div>
+            
             <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
@@ -214,8 +223,7 @@
                 ℹ️ Vérifie les dates de <strong>dernière maintenance</strong> ci-dessous pour que l'Oracle soit précis.
             </div>
 
-            <div id="prev-engins-list" style="margin-bottom:20px; max-height:300px; overflow-y:auto;">
-                </div>
+            <div id="prev-engins-list" style="margin-bottom:20px; max-height:300px; overflow-y:auto;"></div>
             
             <button class="btn-action" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);" onclick="calcPrev()">🔎 DÉTAILS MOIS PAR MOIS</button>
             
@@ -344,10 +352,11 @@
             if(section === 'stock') renderStock();
             if(section === 'prev') {
                 renderPrevList();
-                updateOracle(); // On lance l'oracle direct
+                updateOracle();
             }
             if(section === 'add') updateSelectsAdd();
             if(section === 'remove') initRemoveSelects();
+            if(section === 'rafale') renderCategoryManager(); // Charge la liste pour suppression
         }
 
         function goBack() {
@@ -357,6 +366,34 @@
 
         function hideAllSections() {
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        }
+
+        // --- GESTION CATEGORIES (NEW V8) ---
+        function renderCategoryManager() {
+            const list = document.getElementById('cat-manager-list');
+            list.innerHTML = "";
+            
+            for(let key in CATEGORIES) {
+                list.innerHTML += `
+                    <div class="cat-manager-item">
+                        <span>${CATEGORIES[key].name}</span>
+                        <button class="btn-delete-cat" onclick="deleteCategory('${key}')">🗑️</button>
+                    </div>
+                `;
+            }
+        }
+
+        function deleteCategory(key) {
+            if(confirm("⚠️ T'es sûr de vouloir supprimer cette catégorie ?")) {
+                delete CATEGORIES[key];
+                // Mise à jour Firebase
+                db.collection("config").doc("categories_stock").set(CATEGORIES)
+                    .then(() => {
+                        alert("Catégorie supprimée !");
+                        renderCategoryManager();
+                        updateSelectsAdd(); // Refresh les selects
+                    });
+            }
         }
 
         // --- AFFICHAGE STOCK ---
@@ -710,7 +747,7 @@
             });
         }
 
-        // --- ORACLE & PREVISION (TIMELINE) ---
+        // --- ORACLE & PREVISION ---
         function renderPrevList() {
             const d = document.getElementById('prev-engins-list');
             d.innerHTML = "";
@@ -730,19 +767,17 @@
         function saveDate(machineName, dateVal) {
             maintenanceDates[machineName] = dateVal;
             db.collection("maintenance").doc(currentMachine).set(maintenanceDates, {merge:true});
-            updateOracle(); // Recalcul auto au changement de date
+            updateOracle(); // Recalcul auto
         }
 
-        // --- LE COEUR DE L'ORACLE (BILAN ANNUEL) ---
         function updateOracle() {
             const oracleDiv = document.getElementById('oracle-report');
             const today = new Date();
-            const endOfYear = new Date(today.getFullYear(), 11, 31); // 31 Décembre de cette année
+            const endOfYear = new Date(today.getFullYear(), 11, 31);
             
             const engins = DB_ENGINS[currentMachine] || [];
             let totalNeeded = 0;
 
-            // On vérifie combien de maintenances tombent avant la fin de l'année
             engins.forEach(name => {
                 const dateStr = maintenanceDates[name];
                 if(dateStr) {
@@ -750,10 +785,7 @@
                     const nextMaint = new Date(lastMaint);
                     nextMaint.setMonth(nextMaint.getMonth() + 6);
                     
-                    if(nextMaint <= endOfYear && nextMaint >= today) {
-                        totalNeeded++;
-                    }
-                    // Si la date est très vieille (retard), on compte aussi
+                    if(nextMaint <= endOfYear && nextMaint >= today) totalNeeded++;
                     if (nextMaint < today) totalNeeded++;
                 }
             });
@@ -763,13 +795,11 @@
                 return;
             }
 
-            // Calcul du stock
             const stockH = stockData['filtration']?.['Filtre Huile']?.length || 0;
             const stockG = stockData['filtration']?.['Filtre Gasoil']?.length || 0;
             const stockA = stockData['filtration']?.['Filtre Air']?.length || 0;
             const stockP = stockData['filtration']?.['Préfiltre']?.length || 0;
 
-            // Calcul des manquants
             const missH = Math.max(0, totalNeeded - stockH);
             const missG = Math.max(0, totalNeeded - stockG);
             const missA = Math.max(0, totalNeeded - stockA);
