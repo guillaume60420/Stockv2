@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - MASTER V2</title>
+    <title>C2MI STOCK - MASTER V2 (BLINDÉ)</title>
     
-    <!-- 1. STYLE (CSS) -->
     <style>
         :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; --dark: #880e4f; }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -23,7 +22,7 @@
         .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
         .name { font-weight: 800; color: var(--primary); text-transform: uppercase; font-size: 0.9rem; }
 
-        /* NAVIGATION BAR (Visible quand on est dans une machine) */
+        /* NAVIGATION BAR */
         .nav-bar { display: none; background: white; padding: 12px; border-radius: 12px; margin-bottom: 20px; justify-content: space-between; align-items: center; color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .nav-bar.active { display: flex; }
         .nav-title { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; }
@@ -83,7 +82,6 @@
         .suggestions { position: relative; }
     </style>
 
-    <!-- 2. LIBRAIRIES ROBUSTES -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -91,7 +89,6 @@
 </head>
 <body>
 
-    <!-- SCANNER MODAL -->
     <div id="scanner-modal">
         <h2 style="color:white; margin-bottom:20px;">📷 VISE LE CODE</h2>
         <div id="reader"></div>
@@ -105,18 +102,13 @@
             <p>Maître Guigui Edition V2</p>
         </div>
 
-        <!-- 1. ACCUEIL MACHINES -->
-        <div id="view-machines" class="grid-machines">
-            <!-- Rempli par JS -->
-        </div>
+        <div id="view-machines" class="grid-machines"></div>
 
-        <!-- BARRE NAVIGATION MACHINE (Visible quand on est dans un engin) -->
         <div id="machine-nav" class="nav-bar">
             <span class="nav-title" id="machine-title">--</span>
             <button class="btn-mini" onclick="goHome()">🏠 ACCUEIL</button>
         </div>
 
-        <!-- 2. MENU ACTIONS -->
         <div id="view-menu" class="menu-actions">
             <button class="btn-menu" onclick="nav('stock')">📦 STOCK</button>
             <button class="btn-menu" onclick="nav('add')">➕ AJOUTER</button>
@@ -125,120 +117,51 @@
             <button class="btn-menu btn-rafale" onclick="nav('rafale')">🔫 MAGASINIER</button>
         </div>
 
-        <!-- 3. SECTIONS -->
-
-        <!-- STOCK -->
         <div id="sec-stock" class="section">
-            <div class="section-header">
-                <h2>📦 Inventaire</h2>
-                <button class="btn-back-icon" onclick="goBack()">🔙</button>
-            </div>
+            <div class="section-header"><h2>📦 Inventaire</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
             <div id="stock-list">Chargement...</div>
             <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
-        <!-- AJOUTER -->
         <div id="sec-add" class="section">
-            <div class="section-header">
-                <h2>➕ Entrée Stock</h2>
-                <button class="btn-back-icon" onclick="goBack()">🔙</button>
-            </div>
-            
+            <div class="section-header"><h2>➕ Entrée Stock</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
             <button class="btn-action btn-scan" onclick="startScanner('add')">📷 SCANNER</button>
-            
-            <div class="form-group">
-                <label>Code-Barres</label>
-                <input type="text" id="add_code" placeholder="Code..." oninput="checkCode(this.value)">
-            </div>
-            
+            <div class="form-group"><label>Code-Barres</label><input type="text" id="add_code" placeholder="Code..." oninput="checkCode(this.value)"></div>
             <div id="add_alert" class="alert alert-success" style="display:none">PRODUIT RECONNU ! ✅</div>
-
-            <div class="form-group">
-                <label>Catégorie</label>
-                <div style="display:flex; gap:5px;">
-                    <select id="add_cat" onchange="updateTypes('add')" style="flex:1"></select>
-                    <button class="btn-mini" style="background:#28a745; width:50px; font-size:1.2rem;" onclick="newCategory()">+</button>
-                </div>
-            </div>
-
-            <div class="form-group suggestions">
-                <label>Type de pièce</label>
-                <input type="text" id="add_type" placeholder="Ex: Filtre Huile" oninput="filterTypes('add')" disabled>
-                <div id="add_sugg" class="suggestions-list"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Quantité</label>
-                <input type="number" id="add_qty" value="1" style="text-align:center; font-size:1.5rem; font-weight:bold;">
-            </div>
-
+            <div class="form-group"><label>Catégorie</label><div style="display:flex; gap:5px;"><select id="add_cat" onchange="updateTypes('add')" style="flex:1"></select><button class="btn-mini" style="background:#28a745; width:50px; font-size:1.2rem;" onclick="newCategory()">+</button></div></div>
+            <div class="form-group suggestions"><label>Type de pièce</label><input type="text" id="add_type" placeholder="Ex: Filtre Huile" oninput="filterTypes('add')" disabled><div id="add_sugg" class="suggestions-list"></div></div>
+            <div class="form-group"><label>Quantité</label><input type="number" id="add_qty" value="1" style="text-align:center; font-size:1.5rem; font-weight:bold;"></div>
             <button id="btn-add-valid" class="btn-action" onclick="commitAdd()">VALIDER L'ENTRÉE</button>
             <button class="btn-action btn-cancel" onclick="goBack()">ANNULER</button>
         </div>
 
-        <!-- RETIRER -->
         <div id="sec-remove" class="section">
-            <div class="section-header">
-                <h2>➖ Sortie Stock</h2>
-                <button class="btn-back-icon" onclick="goBack()">🔙</button>
-            </div>
-
+            <div class="section-header"><h2>➖ Sortie Stock</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
             <button class="btn-action btn-scan" onclick="startScanner('remove')">📷 SCANNER SORTIE</button>
-            
-            <div class="form-group">
-                <label>Code (si manuel)</label>
-                <input type="text" id="rem_code" oninput="checkCodeRemove(this.value)" placeholder="Scannez ou tapez le code...">
-            </div>
-
+            <div class="form-group"><label>Code (si manuel)</label><input type="text" id="rem_code" oninput="checkCodeRemove(this.value)" placeholder="Scannez ou tapez le code..."></div>
             <h3 style="margin-bottom:10px; color:#666; font-size:1rem;">Panier de retrait :</h3>
-            <div id="rem_cart" class="rafale-list">
-                <div style="text-align:center; color:#999; padding:20px;">Panier vide</div>
-            </div>
-
+            <div id="rem_cart" class="rafale-list"><div style="text-align:center; color:#999; padding:20px;">Panier vide</div></div>
             <button class="btn-action" onclick="commitRemove()">VALIDER LA SORTIE</button>
-            
             <hr style="margin:20px 0; border:0; border-top:1px dashed #ccc;">
-            
             <h3 style="color:#666; font-size:1rem;">Ajout Manuel (Sans Code)</h3>
-            <div class="form-group">
-                <select id="rem_cat" onchange="updateTypes('rem')"></select>
-            </div>
-            <div class="form-group suggestions">
-                <input type="text" id="rem_type" disabled oninput="filterTypes('rem')" placeholder="Nom de la pièce...">
-                <div id="rem_sugg" class="suggestions-list"></div>
-            </div>
-            <div class="form-group">
-                <input type="number" id="rem_qty" value="1" placeholder="Qté">
-            </div>
+            <div class="form-group"><select id="rem_cat" onchange="updateTypes('rem')"></select></div>
+            <div class="form-group suggestions"><input type="text" id="rem_type" disabled oninput="filterTypes('rem')" placeholder="Nom de la pièce..."><div id="rem_sugg" class="suggestions-list"></div></div>
+            <div class="form-group"><input type="number" id="rem_qty" value="1" placeholder="Qté"></div>
             <button class="btn-action" style="background:#17a2b8" onclick="manualRemoveAdd()">Ajouter Manuellement</button>
-
             <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
-        <!-- RAFALE -->
         <div id="sec-rafale" class="section">
-            <div class="section-header">
-                <h2>🔫 Mode Rafale</h2>
-                <button class="btn-back-icon" onclick="goBack()">🔙</button>
-            </div>
-
+            <div class="section-header"><h2>🔫 Mode Rafale</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
             <button class="btn-action btn-scan" onclick="startScanner('rafale')">🚀 DÉMARRER</button>
-            
-            <div id="rafale-list" class="rafale-list">
-                <div style="text-align:center; padding:20px; color:#aaa;">En attente...</div>
-            </div>
-
+            <div id="rafale-list" class="rafale-list"><div style="text-align:center; padding:20px; color:#aaa;">En attente...</div></div>
             <button class="btn-action" onclick="commitRafale()">ENREGISTRER TOUT ✅</button>
             <button class="btn-action" style="background:#dc3545; margin-top:10px" onclick="clearRafale()">VIDER LA LISTE</button>
             <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
-        <!-- PREVISION -->
         <div id="sec-prev" class="section">
-            <div class="section-header">
-                <h2>📊 Prévisions</h2>
-                <button class="btn-back-icon" onclick="goBack()">🔙</button>
-            </div>
+            <div class="section-header"><h2>📊 Prévisions</h2><button class="btn-back-icon" onclick="goBack()">🔙</button></div>
             <div id="prev-engins-list" style="margin-bottom:20px"></div>
             <button class="btn-action" onclick="calcPrev()">CALCULER</button>
             <div id="prev-res" style="margin-top:20px"></div>
@@ -247,7 +170,6 @@
 
     </div>
 
-    <!-- 3. SCRIPT PRINCIPAL -->
     <script>
         // CONFIG FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyDR1T9ss36NFuQWvq3ypwf7nUcqRhq5dQ8", authDomain: "maintenance-c2mi.firebaseapp.com", projectId: "maintenance-c2mi", storageBucket: "maintenance-c2mi.firebasestorage.app", messagingSenderId: "224545367081", appId: "1:224545367081:web:378d28b892528754c6a838" };
@@ -289,7 +211,6 @@
             const icons = { "4' AXE": "🚂", "ELAN": "🚅", "SKYRAILLER": "🚄", "Pelle UNAC 22 TRR": "🏗️", "Debroussailleuse R/R": "🌿", "ACX": "🚆" };
             
             for(let key in DB_ENGINS) {
-                // ECHAPPEMENT DE L'APOSTROPHE
                 const safeKey = key.replace(/'/g, "\\'");
                 grid.innerHTML += `
                     <div class="card-machine" onclick="selectMachine('${safeKey}')">
@@ -305,9 +226,7 @@
                 if (doc.exists) CATEGORIES = doc.data();
                 else db.collection("config").doc("categories_stock").set(CATEGORIES);
                 updateSelects();
-            }).catch((error) => {
-                updateSelects();
-            });
+            }).catch(() => updateSelects());
         }
 
         function updateSelects() {
@@ -446,9 +365,10 @@
         }
 
         function checkCode(code) {
+            if (!stockData) return; // Sécurité si stockData pas encore chargé
             for(let c in stockData) {
                 for(let t in stockData[c]) {
-                    if(stockData[c][t].some(i => i.code === code)) {
+                    if(stockData[c][t] && stockData[c][t].some(i => i.code === code)) {
                         document.getElementById('add_alert').style.display = 'block';
                         document.getElementById('add_cat').value = c;
                         updateTypes('add');
@@ -460,6 +380,7 @@
             document.getElementById('add_alert').style.display = 'none';
         }
 
+        // ------ CORRECTION MAJEURE ICI MAÎTRE ------
         function commitAdd() {
             const cat = document.getElementById('add_cat').value;
             const type = document.getElementById('add_type').value;
@@ -471,12 +392,15 @@
             const items = [];
             for(let i=0; i<qty; i++) items.push({code: code, date: new Date().toISOString()});
 
+            // On construit l'objet proprement pour que Firestore capte la hiérarchie
             const updateData = {};
-            updateData[`${cat}.${type}`] = firebase.firestore.FieldValue.arrayUnion(...items);
+            updateData[cat] = {}; // On initialise l'objet parent
+            // arrayUnion permet d'ajouter sans écraser l'existant
+            updateData[cat][type] = firebase.firestore.FieldValue.arrayUnion(...items);
 
             db.collection("stocks").doc(currentMachine).set(updateData, {merge: true})
                 .then(() => {
-                    alert("✅ Ajouté !");
+                    alert("✅ Ajouté avec succès Maître !");
                     document.getElementById('add_code').value = "";
                     document.getElementById('add_alert').style.display = 'none';
                     document.getElementById('add_qty').value = 1;
@@ -509,7 +433,7 @@
                 scanner.pause();
                 setTimeout(() => scanner.resume(), 1500);
             } else if(scanMode === 'remove') {
-                closeScanner(); // Important : fermer avant de traiter pour éviter le freeze
+                closeScanner();
                 document.getElementById('rem_code').value = code;
                 checkCodeRemove(code);
             }
@@ -518,7 +442,6 @@
         // RETRAIT
         function checkCodeRemove(code) {
             let found = null;
-            // Scan safe search
             try {
                 for(let c in stockData) {
                     if(!stockData[c]) continue;
@@ -581,8 +504,11 @@
                 const data = doc.data();
                 removeBuffer.forEach(item => {
                     const list = data[item.cat][item.type];
-                    list.splice(-item.qty);
-                    data[item.cat][item.type] = list;
+                    // Sécurité : on retire seulement si la liste existe
+                    if(list && list.length >= item.qty) {
+                        list.splice(-item.qty);
+                        data[item.cat][item.type] = list;
+                    }
                 });
                 t.update(docRef, data);
             }).then(() => {
@@ -595,9 +521,11 @@
         // RAFALE
         function handleRafale(code) {
             let found = null;
-            for(let c in stockData) {
-                for(let t in stockData[c]) {
-                    if(stockData[c][t].some(i => i.code === code)) found = {cat:c, type:t};
+            if (stockData) {
+                for(let c in stockData) {
+                    for(let t in stockData[c]) {
+                        if(stockData[c][t] && stockData[c][t].some(i => i.code === code)) found = {cat:c, type:t};
+                    }
                 }
             }
             if(found) {
@@ -627,11 +555,13 @@
             docRef.get().then(doc => {
                 let data = doc.exists ? doc.data() : {};
                 rafaleBuffer.forEach(item => {
+                    // Sécurité : on s'assure que la structure existe
                     if(!data[item.cat]) data[item.cat] = {};
                     if(!data[item.cat][item.type]) data[item.cat][item.type] = [];
+                    
                     data[item.cat][item.type].push({code: item.code, date: new Date().toISOString()});
                     
-                    if(!CATEGORIES[item.cat].types.includes(item.type)) {
+                    if(CATEGORIES[item.cat] && !CATEGORIES[item.cat].types.includes(item.type)) {
                         CATEGORIES[item.cat].types.push(item.type);
                         db.collection("config").doc("categories_stock").set(CATEGORIES, {merge:true});
                     }
@@ -671,5 +601,3 @@
     </script>
 </body>
 </html>
-
-
