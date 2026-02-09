@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C2MI STOCK - MASTER V3</title>
+    <title>C2MI STOCK - MASTER V4</title>
     
     <style>
         :root { --primary: #E30066; --bg: #f4f4f9; --text: #333; --dark: #880e4f; }
@@ -99,7 +99,7 @@
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition V3</p>
+            <p>Maître Guigui Edition V4</p>
         </div>
 
         <div id="view-machines" class="grid-machines"></div>
@@ -147,7 +147,7 @@
             <div class="form-group"><select id="rem_cat" onchange="updateTypes('rem')"></select></div>
             <div class="form-group suggestions"><input type="text" id="rem_type" disabled oninput="filterTypes('rem')" placeholder="Nom de la pièce..."><div id="rem_sugg" class="suggestions-list"></div></div>
             <div class="form-group"><input type="number" id="rem_qty" value="1" placeholder="Qté"></div>
-            <button class="btn-action" style="background:#17a2b8" onclick="manualRemoveAdd()">Ajouter Manuellement</button>
+            <button class="btn-action" style="background:#17a2b8" onclick="manualRemoveAdd()">👇 METTRE DANS LE PANIER</button>
             <button class="btn-action btn-cancel" onclick="goBack()">RETOUR MENU</button>
         </div>
 
@@ -186,7 +186,6 @@
             "ACX": ["ACX 01", "ACX 02"]
         };
 
-        // On garde une config de base au cas où, mais le code s'adapte
         let CATEGORIES = {
             'filtration': { name: 'Filtration', types: ['Filtre Huile', 'Filtre Gasoil', 'Filtre Air'] },
             'freinage': { name: 'Freinage', types: ['Plaquettes', 'Disques'] }
@@ -235,7 +234,6 @@
             ids.forEach(id => {
                 const el = document.getElementById(id);
                 if(!el) return;
-                // On garde les options, mais on permet d'ajouter si besoin
                 el.innerHTML = '<option value="">-- Catégorie --</option>';
                 for(let k in CATEGORIES) {
                     el.innerHTML += `<option value="${k}">${CATEGORIES[k].name}</option>`;
@@ -285,27 +283,20 @@
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         }
 
-        // NOUVELLE CATEGORIE (SECURISÉE)
         function newCategory() {
             const nom = prompt("Nom de la catégorie ?");
             if(!nom) return;
-            // On nettoie le nom pour l'ID (pas d'espace, minuscule)
             const id = nom.toLowerCase().trim().replace(/\s+/g, '_');
             
-            // On ajoute à la liste locale
             CATEGORIES[id] = { name: nom, types: [] };
-            
-            // On sauvegarde la config pour que ça reste
             db.collection("config").doc("categories_stock").set(CATEGORIES, {merge: true})
                 .then(() => { 
                     alert("✅ Catégorie créée !"); 
                     updateSelects(); 
-                    // On sélectionne direct la nouvelle catégorie
                     setTimeout(() => document.getElementById('add_cat').value = id, 100);
                 });
         }
 
-        // --- AFFICHAGE DU STOCK (CORRIGÉ POUR TOUT VOIR) ---
         function renderStock() {
             const list = document.getElementById('stock-list');
             list.innerHTML = "";
@@ -316,20 +307,14 @@
             }
 
             let somethingDisplayed = false;
-
-            // ON BOUCLE SUR LES DONNÉES RÉELLES DE LA BASE
             for(let catKey in stockData) {
                 const catContent = stockData[catKey];
-                
-                // Si c'est un objet (donc une catégorie contenant des pièces)
                 if (typeof catContent === 'object' && catContent !== null) {
-                    
                     const types = Object.keys(catContent);
                     const activeTypes = types.filter(t => Array.isArray(catContent[t]) && catContent[t].length > 0);
 
                     if(activeTypes.length > 0) {
                         somethingDisplayed = true;
-                        // On essaie de choper le "Joli Nom" dans la config, sinon on met la clé en majuscule
                         const prettyName = (CATEGORIES[catKey] && CATEGORIES[catKey].name) ? CATEGORIES[catKey].name : catKey.toUpperCase();
                         
                         let html = `<div class="stock-cat"><div class="stock-cat-title">${prettyName}</div>`;
@@ -341,11 +326,9 @@
                     }
                 }
             }
-            
             if(!somethingDisplayed) list.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>Stock vide (rien trouvé).</div>";
         }
 
-        // AJOUT
         function updateTypes(prefix) {
             const cat = document.getElementById(`${prefix}_cat`).value;
             const inp = document.getElementById(`${prefix}_type`);
@@ -360,7 +343,6 @@
             const val = inp.value.toLowerCase();
             
             if(!cat) return;
-            // On prend les types de la config OU vide si nouvelle cat
             const types = CATEGORIES[cat]?.types || []; 
             const matches = types.filter(t => t.toLowerCase().includes(val));
 
@@ -375,7 +357,6 @@
                 sugg.appendChild(div);
             });
 
-            // Option de création rapide du type
             if(val && !matches.includes(inp.value)) {
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
@@ -399,13 +380,7 @@
                 for(let t in stockData[c]) {
                     if(Array.isArray(stockData[c][t]) && stockData[c][t].some(i => i.code === code)) {
                         document.getElementById('add_alert').style.display = 'block';
-                        // On essaie de pré-remplir si on connait la cat
-                        if(document.querySelector(`#add_cat option[value="${c}"]`)) {
-                             document.getElementById('add_cat').value = c;
-                        } else {
-                            // Si la cat n'est pas dans le select (cas rare), on ne remplit pas
-                            console.log("Catégorie trouvée en base mais pas dans le menu:", c);
-                        }
+                        if(document.querySelector(`#add_cat option[value="${c}"]`)) document.getElementById('add_cat').value = c;
                         updateTypes('add');
                         setTimeout(() => document.getElementById('add_type').value = t, 50);
                         return;
@@ -415,7 +390,6 @@
             document.getElementById('add_alert').style.display = 'none';
         }
 
-        // --- ENREGISTREMENT BLINDÉ (STRUCTURE HIERARCHIQUE) ---
         function commitAdd() {
             const cat = document.getElementById('add_cat').value;
             const type = document.getElementById('add_type').value;
@@ -428,21 +402,23 @@
             for(let i=0; i<qty; i++) items.push({code: code, date: new Date().toISOString()});
 
             const updateData = {};
-            // Initialisation de l'objet parent pour être sûr que Firestore comprenne la structure
             updateData[cat] = {}; 
             updateData[cat][type] = firebase.firestore.FieldValue.arrayUnion(...items);
 
             db.collection("stocks").doc(currentMachine).set(updateData, {merge: true})
                 .then(() => {
-                    alert("✅ Ajouté ! (Vérifie l'inventaire)");
+                    alert("✅ Ajouté !");
+                    // RESET COMPLET DES CHAMPS (DEMANDE DE PELLO)
                     document.getElementById('add_code').value = "";
                     document.getElementById('add_alert').style.display = 'none';
                     document.getElementById('add_qty').value = 1;
+                    document.getElementById('add_cat').value = "";
+                    document.getElementById('add_type').value = "";
+                    document.getElementById('add_type').disabled = true;
                 })
                 .catch(e => alert("Erreur: " + e.message));
         }
 
-        // SCANNER
         function startScanner(mode) {
             scanMode = mode;
             document.getElementById('scanner-modal').style.display = 'flex';
@@ -473,7 +449,6 @@
             }
         }
 
-        // RETRAIT
         function checkCodeRemove(code) {
             let found = null;
             try {
@@ -503,6 +478,12 @@
             const qty = parseInt(document.getElementById('rem_qty').value);
             if(!cat || !type) return;
             addToRemoveCart(cat, type, qty);
+            
+            // RESET DES CHAMPS MANUELS APRES AJOUT AU PANIER
+            document.getElementById('rem_cat').value = "";
+            document.getElementById('rem_type').value = "";
+            document.getElementById('rem_type').disabled = true;
+            document.getElementById('rem_qty').value = "1";
         }
 
         function addToRemoveCart(cat, type, qty) {
@@ -550,10 +531,10 @@
                 alert("✅ Retiré !");
                 removeBuffer = [];
                 renderRemoveCart();
+                // PAS BESOIN DE RESET LES CHAMPS ICI CAR C'EST DEJA FAIT DANS manualRemoveAdd
             }).catch(e => alert("Erreur: " + e));
         }
 
-        // RAFALE
         function handleRafale(code) {
             let found = null;
             if (stockData) {
@@ -607,7 +588,6 @@
             });
         }
 
-        // PREVISION
         function renderPrevList() {
             const d = document.getElementById('prev-engins-list');
             d.innerHTML = "";
@@ -623,7 +603,6 @@
             
             const d = document.getElementById('prev-res');
             let h = "";
-            // Pour la prévision, on se base sur la config standard (filtration)
             (CATEGORIES['filtration']?.types || []).forEach(t => {
                 const s = stockData['filtration']?.[t]?.length || 0;
                 const m = Math.max(0, count - s);
