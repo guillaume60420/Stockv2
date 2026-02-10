@@ -127,7 +127,7 @@
         
         <div class="header">
             <h1>C2MI STOCK</h1>
-            <p>Maître Guigui Edition V9 (Débloquée)</p>
+            <p>Maître Guigui Edition V9 FIXED 🔧</p>
         </div>
 
         <div id="view-machines" class="grid-machines"></div>
@@ -509,7 +509,8 @@
             if(!cat || !type || !qty) return alert("Remplis tout !");
 
             const items = [];
-            for(let i=0; i<qty; i++) items.push({code: code, date: new Date().toISOString()});
+            const timestamp = Date.now();
+            for(let i=0; i<qty; i++) items.push({code: code, id: timestamp + i});
 
             const updateData = {};
             updateData[cat] = {}; 
@@ -736,10 +737,11 @@
             
             docRef.get().then(doc => {
                 let data = doc.exists ? doc.data() : {};
-                rafaleBuffer.forEach(item => {
+                const timestamp = Date.now();
+                rafaleBuffer.forEach((item, index) => {
                     if(!data[item.cat]) data[item.cat] = {};
                     if(!data[item.cat][item.type]) data[item.cat][item.type] = [];
-                    data[item.cat][item.type].push({code: item.code, date: new Date().toISOString()});
+                    data[item.cat][item.type].push({code: item.code, id: timestamp + index});
                     
                     if(CATEGORIES[item.cat] && !CATEGORIES[item.cat].types.includes(item.type)) {
                         CATEGORIES[item.cat].types.push(item.type);
